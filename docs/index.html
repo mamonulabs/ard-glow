@@ -858,10 +858,11 @@
     <h2>Know your module</h2>
     <p class="section-sub">The ArdCore is an Arduino Nano in eurorack format. Here's what every jack and knob does.</p>
 
-    <div style="display:flex;justify-content:center;margin-bottom:48px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:48px;">
       <div class="pinout-card" style="padding:24px;overflow:hidden;display:inline-block;">
         <img src="Ardcor.jpg" alt="SnazzyFX ArdCore eurorack module" style="max-height:320px;border-radius:12px;display:block;" />
       </div>
+      <a href="SnazzyFX_Ardcore.fpd" download style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">↓ Download panel design (.fpd for Front Panel Express)</a>
     </div>
 
     <div class="porting-grid">
@@ -887,8 +888,8 @@
         <div class="porting-platform">⬆ Outputs — what comes OUT of the ArdCore</div>
         <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
           <div>
-            <div class="step-title">DAC Out <span style="font-size:11px;color:var(--muted);font-weight:400;">(main output jack)</span></div>
-            <div class="step-body"><strong>This is your main CV / audio output.</strong> An 8-bit R-2R ladder DAC built from digital pins 5–12, giving 256 voltage steps across 0–5V. Patch this to a VCA, VCO pitch, filter cutoff, mixer — whatever you want the sketch to control. Written via direct port manipulation (PORTB + PORTD) for speed.</div>
+            <div class="step-title">DAC Out × 2 <span style="font-size:11px;color:var(--muted);font-weight:400;">(main output jacks)</span></div>
+            <div class="step-body"><strong>These are your main CV / audio outputs.</strong> Two buffered copies of the same signal — a built-in mult so you can send the same voltage to two destinations without a separate mult module. The 8-bit R-2R ladder DAC is built from digital pins 5–12, giving 256 voltage steps across 0–5V. Patch to a VCA, VCO pitch, filter cutoff, mixer — whatever you want the sketch to control.</div>
           </div>
           <div>
             <div class="step-title">D0 &amp; D1 <span style="font-size:11px;color:var(--muted);font-weight:400;">(digital output jacks)</span></div>
