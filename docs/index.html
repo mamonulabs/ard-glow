@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArdCore Sketches — Eurorack Arduino Collection</title>
+  <meta name="description" content="A curated collection of 152 Arduino sketches for the SnazzyFX ArdCore eurorack module. Envelopes, sequencers, chaos generators, oscillators, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0e0e;
+      --surface:  #161616;
+      --border:   #222222;
+      --amber:    #d97706;
+      --amber-lt: #f59e0b;
+      --text:     #e5e5e5;
+      --muted:    #aaaaaa;
+      --green:    #00c48c;
+      --red:      #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(14,14,14,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo span { color: var(--amber); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--amber);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--amber-lt); }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 48px;
+      padding: 100px 48px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .hero-text { flex: 1; max-width: 560px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(217,119,6,0.12);
+      border: 1px solid rgba(217,119,6,0.3);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-size: clamp(40px, 5vw, 58px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 22px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--amber);
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 40px;
+      max-width: 480px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--amber);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 26px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--amber-lt); transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 26px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: #aaaaaa; color: #fff; transform: translateY(-1px); }
+
+    .btn-icon { font-size: 18px; }
+
+    .hero-note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #999999;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── MODULE SVG ── */
+    .hero-module {
+      flex-shrink: 0;
+      width: 280px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .stat-item {
+      flex: 1;
+      max-width: 220px;
+      text-align: center;
+      padding: 0 32px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-number span { color: var(--amber); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 96px 48px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: clamp(28px, 3.5vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #ffffff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin-bottom: 56px;
+      line-height: 1.65;
+    }
+
+    /* ── CATALOG FILTERS ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: #444; color: var(--text); }
+
+    .filter-btn.active {
+      background: rgba(217,119,6,0.12);
+      border-color: rgba(217,119,6,0.3);
+      color: var(--amber);
+    }
+
+    .filter-count {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-left: 4px;
+    }
+
+    /* ── SEARCH ── */
+    .search-box {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px 12px 40px;
+      font-size: 14px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input::placeholder { color: #666; }
+    .search-box input:focus { border-color: var(--amber); }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #666;
+    }
+
+    /* ── SKETCH LIST ── */
+    .sketch-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sketch-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .sketch-card:hover { border-color: #333; }
+
+    .sketch-status {
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .sketch-status.pass { background: var(--green); }
+    .sketch-status.fail { background: var(--amber); }
+
+    .sketch-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      min-width: 200px;
+    }
+
+    .sketch-desc {
+      font-size: 13px;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .sketch-cat {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: rgba(217,119,6,0.12);
+      color: var(--amber);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .sketch-path {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: #666;
+      flex-shrink: 0;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 48px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover { border-color: #333; }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .feature-body {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS / PINOUT ── */
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .how-steps { display: flex; flex-direction: column; gap: 32px; }
+
+    .how-step {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(217,119,6,0.15);
+      border: 1px solid rgba(217,119,6,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--amber);
+      margin-top: 2px;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .step-body {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .pinout-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .pinout-card pre {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--green);
+      overflow-x: auto;
+    }
+
+    /* ── TECHNIQUE CARDS ── */
+    .technique-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .technique-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+
+    .technique-card:hover { border-color: #333; }
+
+    .technique-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .technique-body {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .technique-body code {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: var(--green);
+      display: inline;
+    }
+
+    /* ── PORTING STEPS ── */
+    .porting-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .porting-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .porting-platform {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .porting-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .porting-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .porting-code {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 5px;
+      padding: 10px 16px;
+      display: block;
+      color: var(--green);
+      margin-top: 8px;
+    }
+
+    /* ── ROADMAP ── */
+    .roadmap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .roadmap-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .roadmap-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .roadmap-dot.done { background: var(--green); }
+    .roadmap-dot.next { background: var(--amber); }
+    .roadmap-dot.soon { background: #333; }
+
+    .roadmap-text {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .roadmap-tag {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+
+    .roadmap-tag.done { background: rgba(0,196,140,0.12); color: var(--green); }
+    .roadmap-tag.next { background: rgba(217,119,6,0.12); color: var(--amber); }
+    .roadmap-tag.soon { background: #1a1a1a; color: #aaaaaa; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .footer-logo span { color: var(--amber); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-copy {
+      font-size: 12px;
+      color: #999999;
+      font-family: 'DM Mono', monospace;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      .hero { flex-direction: column; padding: 60px 24px 48px; text-align: center; }
+      .hero-module { width: 200px; }
+      .hero-actions { justify-content: center; }
+      .hero-sub { margin: 0 auto 40px; }
+      .stats-bar { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; }
+      .stat-item { padding: 16px; border-right: none; border-bottom: 1px solid var(--border); }
+      .stat-item:nth-child(odd) { border-right: 1px solid var(--border); }
+      .stat-item:nth-last-child(-n+2) { border-bottom: none; }
+      section { padding: 64px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .how-grid { grid-template-columns: 1fr; }
+      .technique-grid { grid-template-columns: 1fr; }
+      .porting-grid { grid-template-columns: 1fr; }
+      .sketch-name { min-width: auto; }
+      .sketch-path { display: none; }
+      .sketch-cat { display: none; }
+      footer { flex-direction: column; gap: 24px; padding: 32px 24px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Ard<span>Core</span></div>
+    <ul class="nav-links">
+      <li><a href="#catalog">Catalog</a></li>
+      <li><a href="#hardware">Hardware</a></li>
+      <li><a href="#techniques">DSP Guide</a></li>
+      <li><a href="#porting">Porting</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+    </ul>
+    <a class="nav-cta" href="https://github.com/mamonu/ard_glow">View on GitHub</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-badge">Open Source Collection</div>
+      <h1>Arduino sketches for <em>eurorack</em></h1>
+      <p class="hero-sub">A curated library of sketches for the SnazzyFX ArdCore module — envelopes, sequencers, chaos generators, oscillators, bytebeat, and more. All on an ATmega328P.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#catalog">
+          <span class="btn-icon">◈</span> Browse Sketches
+        </a>
+        <a class="btn-secondary" href="https://github.com/mamonu/ard_glow">
+          <span class="btn-icon">◆</span> Clone Repo
+        </a>
+      </div>
+      <p class="hero-note">ATmega328P · 8-bit DAC · 16MHz · 2KB SRAM</p>
+    </div>
+
+    <div class="hero-module">
+      <svg viewBox="0 0 240 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Module panel -->
+        <rect x="10" y="10" width="220" height="340" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+        <!-- Title -->
+        <text x="120" y="45" text-anchor="middle" font-family="Syne, sans-serif" font-size="18" font-weight="800" fill="#d97706">ARDCORE</text>
+        <text x="120" y="62" text-anchor="middle" font-family="DM Mono, monospace" font-size="9" fill="#666">ATmega328P</text>
+        <!-- Knobs -->
+        <circle cx="75" cy="105" r="22" fill="#111" stroke="#333" stroke-width="1"/>
+        <circle cx="75" cy="105" r="16" fill="#1e1e1e"/>
+        <line x1="75" y1="105" x2="75" y2="87" stroke="#d97706" stroke-width="2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 75 105" to="360 75 105" dur="8s" repeatCount="indefinite"/>
+        </line>
+        <text x="75" y="138" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 1</text>
+        <circle cx="165" cy="105" r="22" fill="#111" stroke="#333" stroke-width="1"/>
+        <circle cx="165" cy="105" r="16" fill="#1e1e1e"/>
+        <line x1="165" y1="105" x2="165" y2="87" stroke="#00c48c" stroke-width="2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 165 105" to="-360 165 105" dur="12s" repeatCount="indefinite"/>
+        </line>
+        <text x="165" y="138" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 2</text>
+        <!-- Jacks row 1 -->
+        <circle cx="55" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
+        <text x="55" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#666">A2</text>
+        <circle cx="105" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
+        <text x="105" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#666">A3</text>
+        <circle cx="155" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
+        <text x="155" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">CLK</text>
+        <!-- Jacks row 2 -->
+        <circle cx="55" cy="240" r="10" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
+        <text x="55" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">DAC</text>
+        <circle cx="105" cy="240" r="10" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
+        <text x="105" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D0</text>
+        <circle cx="155" cy="240" r="10" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
+        <text x="155" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D1</text>
+        <!-- Waveform animation -->
+        <rect x="35" y="280" width="170" height="50" rx="6" fill="#111" stroke="#222" stroke-width="1"/>
+        <polyline id="wave" fill="none" stroke="#d97706" stroke-width="1.5" opacity="0.7"
+          points="40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298">
+          <animate attributeName="points" dur="3s" repeatCount="indefinite"
+            values="40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298;
+                    40,298 55,312 65,290 80,310 95,295 110,315 125,290 140,308 155,292 170,312 185,295 195,305;
+                    40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298"/>
+        </polyline>
+      </svg>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number">152</div>
+      <div class="stat-label">Sketches</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">15</div>
+      <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">120<span>✓</span></div>
+      <div class="stat-label">Compile verified</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">4</div>
+      <div class="stat-label">VCV Rack ports</div>
+    </div>
+  </div>
+
+  <!-- CATALOG -->
+  <section id="catalog">
+    <div class="section-label">Sketch Catalog</div>
+    <h2>Find the right sketch</h2>
+    <p class="section-sub">Browse all 152 sketches by category. Green dot = compiles, amber = needs work.</p>
+
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Search sketches..." />
+    </div>
+
+    <div class="filter-bar" id="filterBar"></div>
+
+    <div class="sketch-grid" id="sketchGrid"></div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- HARDWARE -->
+  <section id="hardware">
+    <div class="section-label">Hardware Reference</div>
+    <h2>Know your module</h2>
+    <p class="section-sub">The ArdCore is an Arduino Nano in eurorack format. Two knobs, two CV jacks, a clock input, an 8-bit DAC output, and two digital outs.</p>
+
+    <div class="how-grid">
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">K</div>
+          <div>
+            <div class="step-title">Knob 1 &amp; Knob 2</div>
+            <div class="step-body">Potentiometers on A0 and A1. Read via analogRead() → 0–1023. Primary parameter controls for every sketch.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">⇥</div>
+          <div>
+            <div class="step-title">CV Inputs (A2 &amp; A3)</div>
+            <div class="step-body">Analog inputs for external CV. 0–5V range mapped to 0–1023. Use for voltage control of parameters, 1V/oct pitch, etc.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">⏎</div>
+          <div>
+            <div class="step-title">Clock Input</div>
+            <div class="step-body">Digital pin 2 with interrupt. Use for external clocking, trigger inputs, gate detection. Rising edge triggers ISR.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">⇤</div>
+          <div>
+            <div class="step-title">DAC Output + D0 &amp; D1</div>
+            <div class="step-body">8-bit R-2R DAC on pins 5–12 via direct port writes (PORTB + PORTD). Two digital gate/trigger outputs on pins 3 &amp; 4.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pinout-card">
+        <pre>
+   ┌──────────────────────┐
+   │      ARDCORE          │
+   │    SnazzyFX           │
+   │                       │
+   │  ┌──────┐  ┌──────┐  │
+   │  │KNOB 1│  │KNOB 2│  │
+   │  │  A0  │  │  A1  │  │
+   │  └──────┘  └──────┘  │
+   │                       │
+   │  ○ A2    ○ A3    ○ CLK│
+   │  CV IN   CV IN   TRIG │
+   │                       │
+   │  ◉ DAC   ○ D0    ○ D1│
+   │  8-bit   GATE   GATE │
+   │  out     out    out   │
+   │                       │
+   │  ATmega328P  16MHz    │
+   │  2KB SRAM   32KB Flash│
+   └──────────────────────┘
+
+   DAC Output:
+   PORTB bits 0-4 = Arduino pins 8-12
+   PORTD bits 5-7 = Arduino pins 5-7
+   Combined = 8-bit value (0-255)
+        </pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- DSP TECHNIQUES -->
+  <section id="techniques">
+    <div class="section-label">DSP Techniques</div>
+    <h2>Integer math on 8-bit hardware</h2>
+    <p class="section-sub">No floating point. No FPU. Everything is integer arithmetic on a 16MHz ATmega328P with 2KB of RAM. Here's how.</p>
+
+    <div class="technique-grid">
+      <div class="technique-card">
+        <div class="feature-icon">🔢</div>
+        <div class="technique-title">Fixed-point scaling</div>
+        <div class="technique-body">Multiply by integer, divide by power-of-2. Example: 0.7× becomes <code>(long)val * 718L / 1024L</code>. The compiler turns /1024 into a bit shift.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">📐</div>
+        <div class="technique-title">Wavetable lookup</div>
+        <div class="technique-body">Store one cycle in PROGMEM as a 256-byte array. Phase accumulator indexes into the table. DDS gives you sub-Hz to audio-rate oscillators in a few lines.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">⚡</div>
+        <div class="technique-title">Direct port writes</div>
+        <div class="technique-body">Skip <code>digitalWrite()</code> — write PORTB/PORTD directly for the 8-bit DAC. 4× faster. Essential for audio-rate output.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">🎲</div>
+        <div class="technique-title">LFSR noise</div>
+        <div class="technique-body">Linear feedback shift register: XOR tapped bits, shift, repeat. A 16-bit LFSR gives 65535 unique values before cycling. One byte of state.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">🧮</div>
+        <div class="technique-title">Overflow arithmetic</div>
+        <div class="technique-body">Use <code>(long)a * b</code> to avoid 16-bit overflow in intermediate results. Cast back to int after dividing. Critical for any multiplication of 10-bit values.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">📈</div>
+        <div class="technique-title">Envelope state machines</div>
+        <div class="technique-body">Attack/decay/release as integer ramps. Increment by rate each loop. State variable tracks which phase is active. Output to DAC for amplitude control.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">🔗</div>
+        <div class="technique-title">Clock interrupts</div>
+        <div class="technique-body">Attach interrupt to pin 2 (rising edge). Set a flag in the ISR, check it in <code>loop()</code>. Never do analogRead or DAC writes inside the ISR.</div>
+      </div>
+      <div class="technique-card">
+        <div class="feature-icon">🧬</div>
+        <div class="technique-title">Chaotic maps</div>
+        <div class="technique-body">Logistic map, shift registers with nonlinear feedback, neuron models — all work beautifully in integer math. Small state, complex behavior.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- PORTING -->
+  <section id="porting">
+    <div class="section-label">VCV Rack → ArdCore</div>
+    <h2>Port your favorite modules</h2>
+    <p class="section-sub">We've ported SquidAxon, Genie, and Rungler from VCV Rack. Here's the workflow for porting your own.</p>
+
+    <div class="porting-grid">
+      <div class="porting-card">
+        <div class="porting-platform">Step 1</div>
+        <div class="porting-title">Map I/O</div>
+        <div class="porting-sub">VCV modules have unlimited knobs and jacks. ArdCore has 2 knobs + 2 CV in + 1 clock + 1 DAC + 2 digital out. Decide what maps where. Self-exciting modules (chaos, oscillators) are easiest — they need fewer inputs.</div>
+      </div>
+      <div class="porting-card">
+        <div class="porting-platform">Step 2</div>
+        <div class="porting-title">Kill the floats</div>
+        <div class="porting-sub">Replace all float math with integer equivalents. 0.0–1.0 becomes 0–1023. Multiply-then-divide instead of fractional coefficients. Cast to <code>long</code> for intermediate products.</div>
+        <div class="porting-code">(long)val * 718L / 1024L  // ≈ val × 0.7</div>
+      </div>
+      <div class="porting-card">
+        <div class="porting-platform">Step 3</div>
+        <div class="porting-title">Watch the RAM</div>
+        <div class="porting-sub">2KB total. Arduino runtime takes ~500 bytes. Avoid arrays over 256 elements. Use PROGMEM for lookup tables. One wavetable = 256 bytes = 12.5% of your RAM if not in flash.</div>
+      </div>
+      <div class="porting-card">
+        <div class="porting-platform">Step 4</div>
+        <div class="porting-title">Document everything</div>
+        <div class="porting-sub">Add I/O Usage header, algorithm explanation, ASCII diagrams in comments. Future you (and others) will thank you. Use the porting template in <code>templates/</code>.</div>
+        <div class="porting-code">cp templates/VCV_PORT_TEMPLATE.ino my_port/</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ROADMAP -->
+  <section id="roadmap">
+    <div class="section-label">Project Status</div>
+    <h2>What's been done &amp; what's next</h2>
+    <p class="section-sub">This collection is actively maintained. Here's the current state.</p>
+
+    <div class="roadmap-list">
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">152 sketches collected from 4 sources into unified repo</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">Functional catalog with 15 categories and compile status</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">Local compile verification script (arduino-cli)</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">VCV Rack → ArdCore porting template with checklist</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">4 VCV ports: SquidAxon, Genie, Rungler, Looping Envelope</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot done"></div>
+        <div class="roadmap-text">GitHub Pages site with searchable catalog</div>
+        <span class="roadmap-tag done">Done</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot next"></div>
+        <div class="roadmap-text">GitHub Actions CI for compile verification</div>
+        <span class="roadmap-tag next">Up next</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot soon"></div>
+        <div class="roadmap-text">Fix 32 non-compiling sketches</div>
+        <span class="roadmap-tag soon">Planned</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot soon"></div>
+        <div class="roadmap-text">More VCV Rack ports (NLC 8BitCipher, Sloth, etc.)</div>
+        <span class="roadmap-tag soon">Planned</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Ard<span>Core</span></div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/mamonu/ard_glow">GitHub</a></li>
+      <li><a href="https://github.com/darwingrosse/ArdCore-Code">Original ArdCore Code</a></li>
+      <li><a href="http://snazzyfx.com/">SnazzyFX</a></li>
+    </ul>
+    <div class="footer-copy">Open source · ATmega328P forever</div>
+  </footer>
+
+  <script>
+    // ── SKETCH DATA ──
+    const sketches = [
+      // Envelopes
+      {n:"AC25 — VC AR Envelope",d:"Attack/release with VC timing, EOC trigger on D1",c:"Envelopes",p:"official/AC25_VCAREnvelope/",s:1},
+      {n:"AC29 — VC AD Loop Envelope",d:"Attack/decay with loop-on-trigger, gate outputs",c:"Envelopes",p:"official/AC29_VCADLoopEnvelope/",s:1},
+      {n:"AC32 — Bouncing Ball",d:"Physics-based bouncing ball envelope, trigger on bounce",c:"Envelopes",p:"official/AC32_BouncingBall/",s:1},
+      {n:"AC34 — Looping VC Envelope",d:"Free-running AR envelope with VC timing and EOC",c:"Envelopes",p:"community/user_submitted/AC34_LoopingVCEnvelope/",s:1},
+      {n:"ADSR_ENV",d:"Experimental ADSR envelope with controllable stages",c:"Envelopes",p:"snazzy_fx/ADSR_envelope/ADSR_ENV/",s:1},
+      // Sequencers
+      {n:"AC07 — Sequencer",d:"Basic 8-step sequencer with knob-based recording",c:"Sequencers",p:"official/AC07_Sequencer/",s:1},
+      {n:"AC10 — Note Delay",d:"Delay incoming notes by user-selected time",c:"Sequencers",p:"official/AC10_NoteDelay/",s:0},
+      {n:"AC14 — Gate Sequence",d:"Gate sequence output via 8-bit DAC (8 gate channels)",c:"Sequencers",p:"official/AC14_GateSequence/",s:1},
+      {n:"AC27 — 101 SEQ",d:"SH-101 style voltage recorder, 64 steps",c:"Sequencers",p:"official/AC27_101SEQ/",s:1},
+      {n:"AC30 — Dual Euclidean",d:"Dual Euclidean rhythm generator",c:"Sequencers",p:"official/AC30_DualEuclidean/",s:1},
+      {n:"ASCTard001 — Analytic Geometry",d:"Records/plays CV from 8×8 grid coordinates",c:"Sequencers",p:"community/asct/ASCTard001_Analytic_Geometry/",s:1},
+      {n:"ASCTard009 — Phase Patterns",d:"Steve Reich-inspired phase pattern sequencer",c:"Sequencers",p:"community/asct/ASCTard009_Phase_patterns/",s:0},
+      {n:"ACDAN1 — Depth Charge",d:"Random depth charge pattern generator",c:"Sequencers",p:"snazzy_fx/dans_trashy_mods/ACDAN1_DepthCharge/",s:1},
+      {n:"mem_check_",d:"Voltage recorder/sampler with playback",c:"Sequencers",p:"snazzy_fx/dans_trashy_mods/mem_check_/",s:1},
+      {n:"LFSR_SEQUENCER",d:"LFSR-based sequencer with noise/pattern output",c:"Sequencers",p:"snazzy_fx/LFSR/LFSR_SEQUENCER/",s:1},
+      {n:"64-stage Shift Register",d:"64-stage shift register with transpose control",c:"Sequencers",p:"snazzy_fx/shift_register_64/",s:1},
+      // Oscillators
+      {n:"AC24 — Simple VCO",d:"Direct pin manipulation VCO with 1V/oct CV input",c:"Oscillators",p:"official/AC24_SimpleVCO/",s:1},
+      {n:"AC33 — Screecher WT",d:"7-waveform wavetable VCO with 1V/oct",c:"Oscillators",p:"community/user_submitted/AC33_SSQScreecherWT/",s:1},
+      {n:"Auduino v5",d:"Granular synthesis with dual grain control",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/",s:1},
+      {n:"ARDCORE_TRIANGLE",d:"Triangle wave VCO with CV control",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_TRIANGLE/",s:1},
+      {n:"SIMPLEST_SAWTOOTH",d:"Basic sawtooth wave generator",c:"Oscillators",p:"snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH/",s:1},
+      {n:"sine",d:"Sine wave generator using lookup table",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/sine/",s:1},
+      {n:"frequot2",d:"Modified frequency generator",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot2/",s:1},
+      {n:"fac_fm_osc",d:"FM synthesizer with modulator/carrier (.pde)",c:"Oscillators",p:"snazzy_fx/fac_fm_osc/",s:0},
+      {n:"ARDCORE_twotone_mod",d:"Two-tone drone synthesizer",c:"Oscillators",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod/",s:0},
+      {n:"noiseBrother",d:"Sawtooth oscillator generator",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/noiseBrother/",s:1},
+      // LFOs
+      {n:"AC19 — Shaped LFO",d:"Wave-shaped LFO with speed and warp controls",c:"LFOs",p:"official/AC19_ShapedLFO/",s:1},
+      {n:"VC_LFO",d:"Triangle-wave LFO with waveshaping",c:"LFOs",p:"community/user_submitted/VC_LFO/",s:1},
+      {n:"ASCTard005 — LFO",d:"Experimental LFO with selectable waveforms",c:"LFOs",p:"community/asct/ASCTard005_LFO/",s:0},
+      {n:"ARD_SINE_LFO",d:"Sine wave LFO with speed control",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO/",s:1},
+      {n:"ARD_SINE_LFO_smoother_rng",d:"Sine LFO with smoothing and range control",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO_smoother_rng/",s:1},
+      {n:"LFO_w_slow_CPU",d:"Triangle LFO, optimized for low CPU usage",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/LFO_w_slow_CPU/",s:1},
+      {n:"fac_triple_lfo",d:"Three independent LFOs with reset (.pde)",c:"LFOs",p:"snazzy_fx/fac_triple_lfo.pde/",s:0},
+      // Chaos / Generative
+      {n:"AC03 — Drunken Walk",d:"Random walk at full 8-bit resolution",c:"Chaos",p:"official/AC03_DrunkenWalk/",s:1},
+      {n:"AC04 — Drunken Note",d:"Random walk quantized to note resolution",c:"Chaos",p:"official/AC04_DrunkenNote/",s:1},
+      {n:"AC18 — Variation Generator",d:"Step through 2D variation pattern",c:"Chaos",p:"official/AC18_VariationGenerator/",s:1},
+      {n:"AC20 — Depth Random",d:"Random output limited to user-selected bit depth",c:"Chaos",p:"official/AC20_DepthRandom/",s:1},
+      {n:"AC21 — Shift Register",d:"Record 8 values, shift register with offset/transpose",c:"Chaos",p:"official/AC21_ShiftRegister/",s:1},
+      {n:"AC35 — SquidAxon",d:"NLC SquidAxon port: 4-stage chaotic shift register",c:"Chaos",p:"community/user_submitted/AC35_SquidAxon/",s:1},
+      {n:"AC36 — Genie",d:"NLC Genie port: 3-neuron ring oscillator",c:"Chaos",p:"community/user_submitted/AC36_Genie/",s:1},
+      {n:"AC37 — Rungler",d:"HetrickCV Rungler port: 8-bit boolean shift register",c:"Chaos",p:"community/user_submitted/AC37_Rungler/",s:1},
+      {n:"ASCTard008 — Changnesia",d:"Outputs trigger on CV input changes",c:"Chaos",p:"community/asct/ASCTard008_Changnesia/",s:1},
+      {n:"LFSR",d:"Galois LFSR for noise/CV pattern generation",c:"Chaos",p:"snazzy_fx/LFSR/LFSR/",s:1},
+      {n:"LFSR2",d:"LFSR variant for pattern generation",c:"Chaos",p:"snazzy_fx/LFSR/LFSR2/",s:1},
+      {n:"LFSR32",d:"32-bit LFSR pattern generator",c:"Chaos",p:"snazzy_fx/LFSR/LFSR32/",s:1},
+      {n:"CELLULAR_AUTOMATA_SYNTH",d:"1D cellular automata rule-based synth",c:"Chaos",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/CELLULAR_AUTOMATA_SYNTH/",s:1},
+      {n:"fraktal_synth",d:"Fractal algorithm synthesizer, two modes",c:"Chaos",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/fraktal_synth/",s:1},
+      // Clock / Logic
+      {n:"AC05 — Clock Divide",d:"Divide incoming clock to two independent outputs",c:"Clock/Logic",p:"official/AC05_ClockDivide/",s:1},
+      {n:"AC12 — Comparator",d:"Fire triggers on value crossing threshold",c:"Clock/Logic",p:"official/AC12_Comparator/",s:1},
+      {n:"AC13 — Slope Detector",d:"Fire triggers on slope direction change",c:"Clock/Logic",p:"official/AC13_SlopeDetector/",s:1},
+      {n:"AC16 — Trig Multiplier",d:"Multiply incoming clock triggers",c:"Clock/Logic",p:"official/AC16_TrigMultiplier/",s:1},
+      {n:"AC17 — Logic Module",d:"AND, OR, XOR logic on two inputs",c:"Clock/Logic",p:"official/AC17_LogicModule/",s:1},
+      {n:"OX01 — Master Clock",d:"Master clock with variable division and trigger time",c:"Clock/Logic",p:"official/OX01_MasterClock/",s:1},
+      {n:"OX04 — 8-Way Divider",d:"Divide clock 1 through 8 ways simultaneously",c:"Clock/Logic",p:"official/OX04_8WayDivider/",s:0},
+      {n:"ASCTard004 — Gate Counter",d:"Counts clock pulses, creates toggles",c:"Clock/Logic",p:"community/asct/ASCTard004_Gate_Counter/",s:1},
+      {n:"ASCTard006 — Burst Generator",d:"Generates bursts of clock pulses",c:"Clock/Logic",p:"community/asct/ASCTard006_Burst_gen_ino/",s:1},
+      {n:"ASCTard010 — Tapped Out",d:"Pattern/clock module with presets",c:"Clock/Logic",p:"community/asct/ASCTard010_Tapped_Out/",s:1},
+      // CV Utilities
+      {n:"AC02 — Quantizer",d:"Quantize voltage to 5V range of chromatic notes",c:"CV Utilities",p:"official/AC02_Quantizer/",s:1},
+      {n:"AC06 — Trig To Gate",d:"Convert triggers to two user-adjustable gates",c:"CV Utilities",p:"official/AC06_TrigToGate/",s:1},
+      {n:"AC08 — Gate Delay",d:"Delay incoming gates by user-set amount",c:"CV Utilities",p:"official/AC08_GateDelay/",s:1},
+      {n:"AC09 — Trigger Delay",d:"Delay trigger outputs by user-set amount",c:"CV Utilities",p:"official/AC09_TriggerDelay/",s:1},
+      {n:"AC11 — Glissando",d:"Stepped glissando generator with destination trigger",c:"CV Utilities",p:"official/AC11_Glissando/",s:1},
+      {n:"AC15 — Auto Switch",d:"Switch analog inputs to output based on clock",c:"CV Utilities",p:"official/AC15_AutoSwitch/",s:1},
+      {n:"AC22 — Standards",d:"Produce 1V/oct and stepped reference outputs",c:"CV Utilities",p:"official/AC22_Standards/",s:1},
+      {n:"AC23 — Voltage Recorder",d:"Record and playback loop of CV values",c:"CV Utilities",p:"official/AC23_VoltageRecorder/",s:1},
+      {n:"ASCTard002 — CV Scaler",d:"Scales CV between min/max set by knobs",c:"CV Utilities",p:"community/asct/ASCTard002_CV_Scaler/",s:1},
+      {n:"ASCTard007 — Rat S&H",d:"Sample-and-hold with ratchet patterns",c:"CV Utilities",p:"community/asct/ASCTard007_Rat_s_h___t/",s:1},
+      {n:"harmonize",d:"Note harmonizer, transforms CV to harmonic output",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/harmonize_NOTES_CV/",s:0},
+      {n:"nscale_CV_best",d:"Note scale quantizer with transpose and timing",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/",s:0},
+      {n:"uffq_quantizer",d:"Voltage-to-note quantizer",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/uffq_quantizer/",s:0},
+      {n:"THERMOMETER",d:"On-chip temperature sensor readout",c:"CV Utilities",p:"snazzy_fx/THERMOMETER/",s:1},
+      // Audio Effects
+      {n:"AC28 — Rectified Ring Mod",d:"Ring modulation of half-rectified waveforms",c:"Effects",p:"official/AC28_RectifiedRingMod/",s:1},
+      {n:"ANOTHER_DELAY",d:"Feedback delay with knob control",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/ANOTHER_DELAY/",s:1},
+      {n:"BLOG_DELAY_BEST",d:"Optimized delay with feedback and modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST/",s:1},
+      {n:"DELAY_ONLY",d:"Simple delay effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_ONLY/",s:1},
+      {n:"DELAY_SMOOTH",d:"Smooth delay with bitcrush",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_SMOOTH/",s:1},
+      {n:"Long_DELAY_BEST",d:"Extended delay for long decay times",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST/",s:1},
+      {n:"reverb_prttygood",d:"Reverb effect with time-based modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood/",s:1},
+      {n:"SWIRLY_DELAY",d:"Delay with swirling modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/SWIRLY_DELAY/",s:1},
+      {n:"weird_delay",d:"Noisy experimental delay",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/weird_delay/",s:1},
+      {n:"DISTORTION",d:"Bit-crushing distortion effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DISTORTION/",s:1},
+      {n:"waveshpr1",d:"Waveshaper with crush and offset control",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr1/",s:1},
+      {n:"waveshpr2",d:"Waveshaper effect processor",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2/",s:1},
+      {n:"waveshpr3",d:"Waveshaper distortion effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr3/",s:1},
+      {n:"WORKING_CRUSHER",d:"Bit crusher with clock-based processing",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/WORKING_CRUSHER/",s:1},
+      // Bytebeat
+      {n:"accorian",d:"Bytebeat algorithmic audio synthesis",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/accorian/",s:1},
+      {n:"drumsandmelody",d:"Bytebeat drums and melody pattern",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/drumsandmelody/",s:1},
+      {n:"french_friesWcv",d:"Bytebeat with CV pattern control",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/french_friesWcv/",s:1},
+      {n:"fucking_techno",d:"Bytebeat algorithmic techno",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/fucking_techno/",s:1},
+      {n:"pretty1",d:"Bytebeat pattern generator",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1/",s:1},
+      {n:"pretty1_pot",d:"Bytebeat with potentiometer control",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1_pot/",s:1},
+      {n:"shortArduino_DANT",d:"Bytebeat short-form synthesizer",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino_DANT/",s:1},
+      {n:"sloe_dub",d:"Bytebeat dub-style audio",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/sloe_dub/",s:1},
+      {n:"two_controls_machine",d:"Bytebeat dual-control machine",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/two_controls_machine/",s:1},
+      // Noise
+      {n:"DeadCityRadio (LFO rate)",d:"White noise at LFO rates",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/",s:1},
+      {n:"DeadCityRadio (audio rate)",d:"White noise at audio rates",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/",s:1},
+      {n:"ARDCORE_NOISEMAKER",d:"Simple noise generator, multiplies knobs",c:"Noise",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_NOISEMAKER/",s:1},
+      {n:"SDIY_ARDCORE_NOISE",d:"White noise generator",c:"Noise",p:"snazzy_fx/WHITE_NOISE/SDIY_ARDCORE_NOISE/",s:1},
+      // Drums
+      {n:"fac_drums",d:"Lo-fi drum sample player with 8 sounds (.pde)",c:"Drums",p:"snazzy_fx/fac_drums/",s:0},
+      {n:"stereo_beat_gen",d:"Stereo drum pattern generator",c:"Drums",p:"snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_pde/",s:0},
+      // Other
+      {n:"OX02 — Step Variation",d:"Step through 2D pattern for 8 gate outputs (expander)",c:"Expander",p:"official/OX02_StepVariation/",s:1},
+      {n:"OX03 — Analog Tracker",d:"Follow analog input with 8 gate outputs (expander)",c:"Expander",p:"official/OX03_AnalogTracker/",s:1},
+      {n:"CP01 — Compound 01",d:"QuadSketch: VCADLoopEnv, Quantizer, DrunkenNote, SH101",c:"Compound",p:"official/CP01_Compound01/",s:1},
+      {n:"CP02 — Compound 02",d:"QuadSketch: VCADLoopEnv, ShapedLFO, DrunkenNote, SH101",c:"Compound",p:"official/CP02_Compound02/",s:1},
+      {n:"ASCTard013 — Midi2gates",d:"MIDI note-to-gates converter with divider",c:"MIDI",p:"community/asct/ASCTard013_Midi2gates/",s:1},
+    ];
+
+    const GITHUB = "https://github.com/mamonu/ard_glow/tree/main/";
+
+    // Get unique categories and counts
+    const catCounts = {};
+    sketches.forEach(s => { catCounts[s.c] = (catCounts[s.c] || 0) + 1; });
+    const categories = Object.keys(catCounts);
+
+    // Build filter buttons
+    const filterBar = document.getElementById('filterBar');
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.dataset.cat = 'all';
+    allBtn.innerHTML = `All <span class="filter-count">${sketches.length}</span>`;
+    filterBar.appendChild(allBtn);
+
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.cat = cat;
+      btn.innerHTML = `${cat} <span class="filter-count">${catCounts[cat]}</span>`;
+      filterBar.appendChild(btn);
+    });
+
+    let activeFilter = 'all';
+
+    function render() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const grid = document.getElementById('sketchGrid');
+      grid.innerHTML = '';
+
+      const filtered = sketches.filter(s => {
+        const matchCat = activeFilter === 'all' || s.c === activeFilter;
+        const matchSearch = !q || s.n.toLowerCase().includes(q) || s.d.toLowerCase().includes(q) || s.c.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results">No sketches match your search.</div>';
+        return;
+      }
+
+      filtered.forEach(s => {
+        const card = document.createElement('a');
+        card.className = 'sketch-card';
+        card.href = GITHUB + s.p;
+        card.target = '_blank';
+        card.style.textDecoration = 'none';
+        card.innerHTML = `
+          <div class="sketch-status ${s.s ? 'pass' : 'fail'}"></div>
+          <div class="sketch-name">${s.n}</div>
+          <div class="sketch-desc">${s.d}</div>
+          <div class="sketch-cat">${s.c}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Filter click handlers
+    filterBar.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.cat;
+      render();
+    });
+
+    // Search handler
+    document.getElementById('searchInput').addEventListener('input', render);
+
+    // Initial render
+    render();
+  </script>
+
+</body>
+</html>
