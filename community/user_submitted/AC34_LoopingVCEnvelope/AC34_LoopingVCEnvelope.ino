@@ -16,6 +16,37 @@
 //               the envelope's own rise/fall times and other
 //               parameters each cycle.
 //
+//  How It Works:
+//
+//    The envelope is a simple ramp-up / ramp-down shape:
+//
+//    5V ─┐          /\        /\        /\
+//        │         /  \      /  \      /  \
+//        │        /    \    /    \    /    \
+//        │       /      \  /      \  /      \
+//    0V ─┼──────/────────\/────────\/────────\──→ time
+//        │      ↑   ↑    ↑↑  ↑    ↑↑
+//        │      │   │    ││  │    ││
+//        │    start │   EOC start │  EOC
+//        │      attack  D1  attack  D1
+//        │          peak        peak
+//        │          D0          D0
+//
+//    Each loop() iteration adds a small increment (riseValue) during
+//    attack, or subtracts (fallValue) during release. When the value
+//    hits 255 (5V), it flips to release. When it hits 0, it fires
+//    the EOC trigger on D1 and immediately starts a new attack.
+//
+//    The increment size controls speed: a larger increment means
+//    fewer loop iterations to reach peak = faster attack. The formula
+//    is: riseValue = 255.0 / (knob + CV + 5). The +5 prevents
+//    division by zero and sets the minimum time.
+//
+//    Because the rate depends on loop() speed, the actual time range
+//    varies with what else is running — but for CV-rate envelopes
+//    this is fine. At ~2kHz loop rate, attack ranges from ~1ms
+//    (knobs at zero) to ~1 second (knobs fully CW + CV).
+//
 //  I/O Usage:
 //    Knob 1:         Attack time (base)
 //    Knob 2:         Release time (base)
@@ -28,6 +59,15 @@
 //
 //  Input Expander:  unused
 //  Output Expander: 8 bits of output exposed
+//
+//  Generative Patch Example:
+//
+//    VCO out ──→ VCA in
+//    DAC out ──→ VCA CV (envelope shapes the sound)
+//    D1 (EOC) ──→ MULT ──→ S&H₁ trig + S&H₂ trig + S&H₃ trig
+//    S&H₁ out ──→ A2 (randomise attack each cycle)
+//    S&H₂ out ──→ A3 (randomise release each cycle)
+//    S&H₃ out ──→ VCO pitch CV
 //
 //  Created:  04 Apr 2026  Based on AC25_VCAREnvelope (19 Mar 2011 ddg)
 //

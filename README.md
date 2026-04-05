@@ -25,6 +25,19 @@ User-contributed sketches.
 ### `libraries/`
 Shared Arduino libraries for ArdCore development.
 
+### `templates/`
+VCV Rack → ArdCore porting template with structured checklist and boilerplate.
+
+### `scripts/`
+Build/verify tooling. `verify-all.sh` compiles all sketches via `arduino-cli`.
+
+## Documentation
+
+- **[CATALOG.md](CATALOG.md)** — Functional index of all 152 sketches, grouped by category
+- **[TUTORIAL.md](TUTORIAL.md)** — ArdCore development guide (hardware, pin mapping, DAC, ISR)
+- **[ardcore_exploration.md](ardcore_exploration.md)** — DSP technique catalog for the platform
+- **[tinydvco_to_ardcore_port.md](tinydvco_to_ardcore_port.md)** — ATtiny85 → ArdCore porting guide
+
 ## See Also
 
 - [thedug/thedug_ardcore](https://github.com/thedug/thedug_ardcore) - Douglas Ferguson's sketches (arpeggiator, etc.)

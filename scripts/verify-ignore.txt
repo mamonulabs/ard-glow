@@ -1,0 +1,45 @@
+# verify-ignore.txt — Sketches to skip during compilation
+#
+# One path per line, relative to repo root.
+# Lines starting with # are comments. Blank lines are ignored.
+#
+# Add sketches here that are known not to compile on modern
+# Arduino (pre-1.0 API, missing libraries, incomplete code, etc.)
+
+# Porting template (not a real sketch)
+templates/VCV_PORT_TEMPLATE.ino
+
+# .pde files (pre-Arduino 1.0 format)
+snazzy_fx/CV-LFO_SKETCHES/arbitray_quantizer_FASTNOTES.pde
+snazzy_fx/CV-LFO_SKETCHES/simple_random_gates.pde
+snazzy_fx/CV-LFO_SKETCHES/spaceshipquantizer_pde.pde
+snazzy_fx/dans_trashy_mods/AC24_SimpleVCOchaos/AC24_SimpleVCOchaos.pde
+snazzy_fx/dans_trashy_mods/AC66_NOISE_BOMB/AC66_NOISE_BOMB.pde
+snazzy_fx/dans_trashy_mods/AC_Sinetests_pde/AC_Sinetests_pde.pde
+snazzy_fx/dans_trashy_mods/CHAOTIC_VCO2/CHAOTIC_VCO2.pde
+snazzy_fx/dans_trashy_mods/fucked_square/fucked_square.pde
+snazzy_fx/dans_trashy_mods/randomRecorder/randomRecorder.pde
+snazzy_fx/dans_trashy_mods/spaceshipquantizer_pde.pde
+snazzy_fx/EXPERIMENTAL_AUDIO/chiptune.pde
+snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot/frequot.pde
+snazzy_fx/EXPERIMENTAL_AUDIO/fucked_squareB/fucked_squareB.pde
+snazzy_fx/EXPERIMENTAL_AUDIO/really_messed_up_oscillator.pde
+snazzy_fx/fac_drums/fac_drums.pde
+snazzy_fx/fac_fm_osc/fac_fm_osc.pde
+snazzy_fx/fac_triple_lfo.pde/fac_triple_lfo.pde
+
+# .ino files that fail to compile (missing libs, API issues, etc.)
+community/asct/ASCTard005_LFO/ASCTard005_LFO.ino
+community/asct/ASCTard009_Phase_patterns/ASCTard009_Phase_patterns.ino
+official/AC10_NoteDelay/AC10_NoteDelay.ino
+official/OX04_8WayDivider/OX04_8WayDivider.ino
+snazzy_fx/BYTEBEAT_CV_and_AUDIO/CROWD_Make_compatible/CROWD_Make_compatible.ino
+snazzy_fx/CV-LFO_SKETCHES/Dans_freakoutCV_/eq_freakoutCV_aduo.ino
+snazzy_fx/CV-LFO_SKETCHES/harmonize_NOTES_CV/harmonize.ino
+snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/nscale_CV.ino
+snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/nscale_CV_best.ino
+snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/nscale_CV_strict.ino
+snazzy_fx/CV-LFO_SKETCHES/uffq_quantizer/uffq_quantizer.ino
+snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/freqout_ardcore.ino
+snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_pde/stereo_beat_gen_pde.ino
+snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod/ARDCORE_twotone_mod.ino

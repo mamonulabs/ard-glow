@@ -10,6 +10,76 @@
 //               Based on SquidAxon by Andrew Fitch (NLC).
 //               https://github.com/mhetrick/nonlinearcircuits
 //
+//  How It Works:
+//
+//    The SquidAxon is a 4-stage pipeline that shifts values forward
+//    on every clock pulse. New values enter stage 1, old values
+//    cascade through stages 2→3→4.
+//
+//    Clock ──┐
+//            ↓
+//    ┌───────────────────────────────────────────────┐
+//    │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐
+//    │  │ Stage 1 │→ │ Stage 2 │→ │ Stage 3 │→ │ Stage 4 │
+//    │  └────┬────┘  └─────────┘  └─────────┘  └────┬────┘
+//    │       │              NEW VALUE                 │
+//    │       │         ┌─────────────┐               │
+//    │       │    ┌────┤   Mix In    │←── In1 (A2)   │
+//    │       │    │    │  in1 + in2  │←── In2 (A3)   │
+//    │       │    │    │  + linFb    │               │
+//    │       │    │    │  + nlFb     │               │
+//    │       │    │    └─────────────┘               │
+//    │       ↓    │                                   │
+//    │    DAC Out │         FEEDBACK PATHS            │
+//    │            │    ┌─────────────────────────────┘
+//    │            │    │
+//    │            │    ├──→ Linear: stage4 × Knob2 (0-1x)
+//    │            │    │    (direct copy, scaled down)
+//    │            │    │
+//    │            │    └──→ Nonlinear: squidDiode(stage4 × Knob1)
+//    │            │         (diode-shaped distortion, inverted)
+//    │            │
+//    │            └────→ into stage 1
+//    └───────────────────────────────────────────────┘
+//
+//    The magic is in the nonlinear feedback path. The squidDiode()
+//    function models an analog diode: small inputs produce almost
+//    no output (below the "knee"), but once the signal exceeds a
+//    threshold (~0.667 in normalized terms), the output rises
+//    sharply as a squared curve. This is what creates chaos —
+//    the feedback relationship is not proportional, so the system
+//    can't settle into a simple repeating pattern.
+//
+//    squidDiode transfer curve:
+//
+//    output
+//      │            ╱
+//      │           ╱   ← steep quadratic rise
+//      │          ╱
+//      │        ╱
+//      │      _╱       ← "knee" at 0.667
+//      │  ___─
+//      │──          ← near-zero below knee
+//      └───────────── input
+//
+//    The diode output is also inverted (× -0.7), creating negative
+//    feedback — when stage 4 goes strongly positive, the diode
+//    pushes stage 1 negative. This push-pull between stages is
+//    what generates the chaotic wandering.
+//
+//    Knob 1 (nonlinear amount) controls how much chaos: at zero,
+//    the system is a boring shift register. Turn it up and values
+//    start evolving unpredictably. Knob 2 (linear feedback) adds
+//    a simpler recirculation that creates longer correlations
+//    between clock steps.
+//
+//    Integer Math Note:
+//    The VCV original uses ±10V floats. Here we use ±1023 signed
+//    integers (matching the 10-bit ADC range). All multiplications
+//    use (long) to avoid 16-bit overflow, then divide back down.
+//    The diode model constants are pre-scaled to this integer
+//    domain — see comments in squidDiode() for the derivation.
+//
 //  I/O Usage:
 //    Knob 1:         Nonlinear feedback amount (0-4x)
 //    Knob 2:         Linear feedback amount (0-1x)
@@ -80,46 +150,65 @@ void loop()
   if (clkState) {
     clkState = LOW;
 
+    // The shift register advances in round-robin: on clock pulse 0,
+    // stage 1 gets a new mixed value. On pulses 1-3, each stage
+    // copies the one before it. This means it takes 4 clocks for
+    // a value to travel from stage 1 to stage 4.
     if (stage == 0) {
-      // read inputs: A2 and A3 as signed values centered at 512
+      // --- Build the new value for stage 1 ---
+
+      // External inputs: read A2 and A3 as signed values.
+      // ArdCore ADC gives 0-1023, subtract 512 to center at zero.
+      // With nothing patched, the knobs sit near 512 → ~0.
       int in1 = analogRead(2) - 512;
       int in2 = analogRead(3) - 512;
       int mixIn = in1 + in2;
 
-      // linear feedback: stage 4 output scaled by knob 2
-      // knob 2 range 0-1023 maps to 0.0-1.0
+      // Linear feedback: stage 4 output scaled by Knob 2.
+      // This is a straight copy of the oldest value, attenuated.
+      // At Knob 2 = 0, no feedback. At full CW, 100% feedback.
+      // Uses (long) to avoid overflow: 1023 * 1023 > 16-bit max.
       long linFb = (long)stages[3] * analogRead(1) / 1023L;
       mixIn += (int)linFb;
 
-      // nonlinear feedback: diode model of stage 4, scaled by knob 1
-      // knob 1 range 0-1023 maps to 0.0-4.0
+      // Nonlinear feedback: run stage 4 through the diode model.
+      // Knob 1 scales the input to the diode (0-4x gain).
+      // The /256L gives 0-4x range from the 0-1023 knob value.
       long nlInput = (long)stages[3] * analogRead(0) / 256L;
       int nlFb = squidDiode((int)nlInput);
-      // invert and scale (~0.7x) like the original
+
+      // Invert (× -1) and attenuate (× 0.7) the diode output.
+      // The inversion is key: it creates negative feedback, so
+      // large positive stage 4 values push stage 1 negative.
+      // -718/1024 ≈ -0.7 using fixed-point division.
       nlFb = (int)((long)nlFb * -718L / 1024L);
       mixIn += nlFb;
 
-      // clamp to ±1023
+      // Clamp to ±1023 (our ±5V equivalent)
       if (mixIn > 1023) mixIn = 1023;
       if (mixIn < -1023) mixIn = -1023;
 
       stages[0] = mixIn;
     } else {
+      // Stages 2-4 simply copy the previous stage (shift forward)
       stages[stage] = stages[stage - 1];
     }
 
-    stage = (stage + 1) & 3;  // mod 4
+    stage = (stage + 1) & 3;  // mod 4 via bitmask (faster than %)
   }
 
-  // DAC output: map signed -1023..+1023 to unsigned 0..255
+  // DAC output: convert signed ±1023 to unsigned 0-255.
+  // Add 1023 to shift range to 0-2046, then >>3 to fit 0-255.
   int dacVal = (stages[0] + 1023) >> 3;
   if (dacVal > 255) dacVal = 255;
   if (dacVal < 0) dacVal = 0;
   dacOutput((byte)dacVal);
 
-  // D0: gate when stage 1 is positive
+  // D0: HIGH when stage 1 (newest) is positive — useful as a
+  // gate that follows the chaos, flipping unpredictably.
   digitalWrite(digPin[0], stages[0] > 0 ? HIGH : LOW);
-  // D1: gate when stage 4 is positive
+  // D1: HIGH when stage 4 (oldest) is positive — a delayed,
+  // smoother version of D0 (4 clocks behind).
   digitalWrite(digPin[1], stages[3] > 0 ? HIGH : LOW);
 }
 
@@ -131,24 +220,35 @@ void isr()
 }
 
 //  squidDiode - piecewise polynomial diode model
-//  input and output in signed integer domain (±1023 scale)
-//  port of NLC's: sign * (|abs(x*0.1)-0.667| + |abs(x*0.1)-0.667|)^2 * 12.1
+//  ─────────────────────────────────────────────
+//  Models the voltage-current curve of a real diode: nearly zero
+//  output below a threshold ("knee"), then a steep quadratic rise.
+//
+//  Original NLC formula (float, ±10V domain):
+//    sign(x) × (|abs(x×0.1) - 0.667| + |abs(x×0.1) - 0.667|)² × 12.1
+//
+//  Simplified: the inner term is just 2×|x×0.1 - 0.667| (always ≥0),
+//  then squared and scaled. The 0.667 is the diode knee voltage.
+//
+//  Integer port (±1023 domain):
+//    0.1 scaling  → divide by 10
+//    0.667 knee   → 68 in our scale (0.667 × 1023 / 10 ≈ 68)
+//    12.1 gain    → absorbed into /84L divisor after squaring
+//                   (tuned empirically to match NLC output range)
+//
+//  Input:  signed int, ±1023 scale (but can exceed with 4x gain)
+//  Output: signed int, clamped to ±1023
 int squidDiode(int input)
 {
   int sign = input >= 0 ? 1 : -1;
   long absIn = (long)(input >= 0 ? input : -input);
 
-  // scale: absIn * 0.1 → absIn / 10, but we're in 1023-scale
-  // so "0.667" in 1023-scale ≈ 68 (0.667 * 1023 / 10 ≈ 68)
-  long scaled = absIn / 10;
-  long diodeIn = scaled - 68L;
-  if (diodeIn < 0) diodeIn = -diodeIn;
-  long stage2 = diodeIn + diodeIn;  // same as abs(x) + x when x>0
-  // square and scale: original multiplies by 0.0432477 * 28 * 10 ≈ 12.1
-  // in integer domain, keep it proportional
-  long stage3 = (stage2 * stage2) / 84L;  // tuned to match NLC range
+  long scaled = absIn / 10;          // × 0.1
+  long diodeIn = scaled - 68L;       // subtract knee voltage
+  if (diodeIn < 0) diodeIn = -diodeIn;  // absolute value
+  long stage2 = diodeIn + diodeIn;   // × 2 (double-rectified)
+  long stage3 = (stage2 * stage2) / 84L;  // square and scale
 
-  // clamp to ±1023
   if (stage3 > 1023) stage3 = 1023;
 
   return (int)(stage3 * sign);
