@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ArdCore Sketches — Eurorack Arduino Collection</title>
-  <meta name="description" content="A curated collection of 152 Arduino sketches for the SnazzyFX ArdCore eurorack module. Envelopes, sequencers, chaos generators, oscillators, and more." />
+  <meta name="description" content="A curated collection of 153 Arduino sketches for the SnazzyFX ArdCore eurorack module. Envelopes, sequencers, chaos generators, oscillators, and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -938,7 +938,7 @@
   <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat-item">
-      <div class="stat-number">152</div>
+      <div class="stat-number">153</div>
       <div class="stat-label">Sketches</div>
     </div>
     <div class="stat-item">
@@ -946,11 +946,11 @@
       <div class="stat-label">Categories</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number">120<span>✓</span></div>
+      <div class="stat-number">121<span>✓</span></div>
       <div class="stat-label">Compile verified</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number">4</div>
+      <div class="stat-number">5</div>
       <div class="stat-label">VCV Rack ports</div>
     </div>
   </div>
@@ -959,7 +959,7 @@
   <section id="catalog">
     <div class="section-label">Sketch Catalog</div>
     <h2>Find the right sketch</h2>
-    <p class="section-sub">Browse all 152 sketches by category. Green dot = compiles, amber = needs work.</p>
+    <p class="section-sub">Browse all 153 sketches by category. Green dot = compiles, amber = needs work.</p>
 
     <div class="search-box">
       <span class="search-icon">⌕</span>
@@ -1083,7 +1083,7 @@
   <section id="porting">
     <div class="section-label">VCV Rack → ArdCore</div>
     <h2>Port your favorite modules</h2>
-    <p class="section-sub">We've ported SquidAxon, Genie, and Rungler from VCV Rack. Here's the workflow for porting your own.</p>
+    <p class="section-sub">We've ported SquidAxon, Genie, Rungler, and AlgoVCO from VCV Rack. Here's the workflow for porting your own.</p>
 
     <div class="porting-grid">
       <div class="porting-card">
@@ -1164,7 +1164,7 @@
 <span class="comment"># Run the batch compile check</span>
 <span class="prompt">$</span> <span class="cmd">./scripts/verify-all.sh</span>
 
-<span class="output">Verifying 152 sketches against arduino:avr:nano …
+<span class="output">Verifying 153 sketches against arduino:avr:nano …
   ✅ PASS  official/AC01_ButterflyMidi/AC01_ButterflyMidi.ino
   ✅ PASS  official/AC02_ADSREnvGen/AC02_ADSREnvGen.ino
   …
@@ -1242,7 +1242,7 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
     <div class="roadmap-list">
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">152 sketches collected from 4 sources into unified repo</div>
+        <div class="roadmap-text">153 sketches collected from 4 sources into unified repo</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
@@ -1262,7 +1262,7 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">4 VCV ports: SquidAxon, Genie, Rungler, Looping Envelope</div>
+        <div class="roadmap-text">5 VCV ports: SquidAxon, Genie, Rungler, Looping Envelope, AlgoVCO</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
@@ -1323,6 +1323,7 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       // Oscillators
       {n:"AC24 — Simple VCO",d:"Direct pin manipulation VCO with 1V/oct CV input",c:"Oscillators",p:"official/AC24_SimpleVCO/",s:1},
       {n:"AC33 — Screecher WT",d:"7-waveform wavetable VCO with 1V/oct",c:"Oscillators",p:"community/user_submitted/AC33_SSQScreecherWT/",s:1},
+      {n:"AC38 — Algo VCO",d:"16 algorithmic waveforms, zero wavetable memory, 3 VC-modifiable",c:"Oscillators",p:"community/user_submitted/AC38_AlgoVCO/",s:1},
       {n:"Auduino v5",d:"Granular synthesis with dual grain control",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/",s:1},
       {n:"ARDCORE_TRIANGLE",d:"Triangle wave VCO with CV control",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_TRIANGLE/",s:1},
       {n:"SIMPLEST_SAWTOOTH",d:"Basic sawtooth wave generator",c:"Oscillators",p:"snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH/",s:1},
