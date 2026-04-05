@@ -618,6 +618,101 @@
       margin-top: 8px;
     }
 
+    /* ── SETUP / INSTALL ── */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .setup-step-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .setup-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .setup-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .setup-terminal {
+      background: #0c0c0c;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .setup-terminal-bar {
+      background: #1a1a1a;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .setup-terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .setup-terminal-dot.red { background: #ff5f57; }
+    .setup-terminal-dot.yellow { background: #febc2e; }
+    .setup-terminal-dot.green { background: #28c840; }
+
+    .setup-terminal-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: #666;
+      margin-left: 8px;
+    }
+
+    .setup-terminal pre {
+      margin: 0;
+      padding: 16px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #c8c8c8;
+      overflow-x: auto;
+    }
+
+    .setup-terminal pre .cmd { color: var(--green); }
+    .setup-terminal pre .comment { color: #666; }
+    .setup-terminal pre .prompt { color: var(--amber); }
+    .setup-terminal pre .output { color: #888; }
+
+    .setup-note {
+      font-size: 12px;
+      color: #666;
+      font-family: 'DM Mono', monospace;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
     /* ── ROADMAP ── */
     .roadmap-list {
       display: flex;
@@ -745,6 +840,7 @@
       <li><a href="#hardware">Hardware</a></li>
       <li><a href="#techniques">DSP Guide</a></li>
       <li><a href="#porting">Porting</a></li>
+      <li><a href="#setup">Setup</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
     </ul>
     <a class="nav-cta" href="https://github.com/mamonu/ard_glow">View on GitHub</a>
@@ -1012,6 +1108,126 @@
         <div class="porting-sub">Add I/O Usage header, algorithm explanation, ASCII diagrams in comments. Future you (and others) will thank you. Use the porting template in <code>templates/</code>.</div>
         <div class="porting-code">cp templates/VCV_PORT_TEMPLATE.ino my_port/</div>
       </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- SETUP -->
+  <section id="setup">
+    <div class="section-label">macOS Setup</div>
+    <h2>Get compiling in 5 minutes</h2>
+    <p class="section-sub">Everything you need to compile and upload ArdCore sketches on a Mac — from zero to blinking LED.</p>
+
+    <div class="setup-grid">
+
+      <!-- Step 1: Homebrew + arduino-cli -->
+      <div class="setup-card">
+        <div class="setup-step-label">Step 1 — Install the toolchain</div>
+        <div class="setup-title">Homebrew + arduino-cli</div>
+        <div class="setup-sub">If you don't have Homebrew yet, install it first. Then grab <code>arduino-cli</code> — the official Arduino command-line tool that handles cores, libraries, and compilation.</div>
+        <div class="setup-terminal">
+          <div class="setup-terminal-bar">
+            <div class="setup-terminal-dot red"></div>
+            <div class="setup-terminal-dot yellow"></div>
+            <div class="setup-terminal-dot green"></div>
+            <span class="setup-terminal-title">Terminal — Install</span>
+          </div>
+          <pre><span class="comment"># Install Homebrew (skip if you already have it)</span>
+<span class="prompt">$</span> <span class="cmd">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</span>
+
+<span class="comment"># Install arduino-cli</span>
+<span class="prompt">$</span> <span class="cmd">brew install arduino-cli</span>
+
+<span class="comment"># Install the AVR core (ATmega328P lives here)</span>
+<span class="prompt">$</span> <span class="cmd">arduino-cli core install arduino:avr</span></pre>
+        </div>
+        <div class="setup-note">💡 This downloads ~150MB of AVR compiler toolchain + header files.</div>
+      </div>
+
+      <!-- Step 2: Clone + verify -->
+      <div class="setup-card">
+        <div class="setup-step-label">Step 2 — Clone &amp; verify</div>
+        <div class="setup-title">Get the repo and test compilation</div>
+        <div class="setup-sub">Clone this collection and run the batch verify script to make sure everything compiles. The script tests all <code>.ino</code> files against the Arduino Nano target board.</div>
+        <div class="setup-terminal">
+          <div class="setup-terminal-bar">
+            <div class="setup-terminal-dot red"></div>
+            <div class="setup-terminal-dot yellow"></div>
+            <div class="setup-terminal-dot green"></div>
+            <span class="setup-terminal-title">Terminal — Verify</span>
+          </div>
+          <pre><span class="comment"># Clone the repo</span>
+<span class="prompt">$</span> <span class="cmd">git clone https://github.com/mamonu/ard_glow.git</span>
+<span class="prompt">$</span> <span class="cmd">cd ard_glow</span>
+
+<span class="comment"># Run the batch compile check</span>
+<span class="prompt">$</span> <span class="cmd">./scripts/verify-all.sh</span>
+
+<span class="output">Verifying 152 sketches against arduino:avr:nano …
+  ✅ PASS  official/AC01_ButterflyMidi/AC01_ButterflyMidi.ino
+  ✅ PASS  official/AC02_ADSREnvGen/AC02_ADSREnvGen.ino
+  …
+  ⚠️ SKIP  snazzy_fx/Auduino_SYNTH_ARDCORE_MODS/Auduino2b.pde
+━━━━━━━━━━━━━━━━━━━━━━
+  PASS: 121  FAIL: 0  SKIP: 31</span></pre>
+        </div>
+        <div class="setup-note">💡 Use <code>--verbose</code> to see full compiler output for failures.</div>
+      </div>
+
+      <!-- Step 3: Compile a single sketch -->
+      <div class="setup-card">
+        <div class="setup-step-label">Step 3 — Compile a single sketch</div>
+        <div class="setup-title">Build &amp; upload to your ArdCore</div>
+        <div class="setup-sub">Pick any sketch and compile it. To upload, connect the ArdCore via USB (it's an Arduino Nano under the hood) and add the <code>-u</code> flag with the serial port.</div>
+        <div class="setup-terminal">
+          <div class="setup-terminal-bar">
+            <div class="setup-terminal-dot red"></div>
+            <div class="setup-terminal-dot yellow"></div>
+            <div class="setup-terminal-dot green"></div>
+            <span class="setup-terminal-title">Terminal — Compile &amp; Upload</span>
+          </div>
+          <pre><span class="comment"># Compile only (no hardware needed)</span>
+<span class="prompt">$</span> <span class="cmd">arduino-cli compile --fqbn arduino:avr:nano \
+    official/AC07_StepSequencer/AC07_StepSequencer.ino</span>
+
+<span class="output">Sketch uses 3,842 bytes (12%) of program storage space.
+Global variables use 134 bytes (6%) of dynamic memory.</span>
+
+<span class="comment"># Find your serial port</span>
+<span class="prompt">$</span> <span class="cmd">arduino-cli board list</span>
+
+<span class="output">Port         Protocol Type Board Name  FQBN
+/dev/cu.usbserial-1420 serial   Serial Port (USB) …</span>
+
+<span class="comment"># Compile + upload (ATmega328P with old bootloader)</span>
+<span class="prompt">$</span> <span class="cmd">arduino-cli compile -u -p /dev/cu.usbserial-1420 \
+    --fqbn arduino:avr:nano:cpu=atmega328old \
+    official/AC07_StepSequencer/AC07_StepSequencer.ino</span></pre>
+        </div>
+        <div class="setup-note">⚠️ Most ArdCores ship with the <strong>old bootloader</strong> — use <code>cpu=atmega328old</code>. If upload fails, try without it.</div>
+      </div>
+
+      <!-- Step 4: Arduino IDE (optional) -->
+      <div class="setup-card">
+        <div class="setup-step-label">Alternative — Arduino IDE</div>
+        <div class="setup-title">Prefer a GUI?</div>
+        <div class="setup-sub">You can also use the Arduino IDE. Set Board to <strong>Arduino Nano</strong>, Processor to <strong>ATmega328P (Old Bootloader)</strong>, and open any <code>.ino</code> file directly.</div>
+        <div class="setup-terminal">
+          <div class="setup-terminal-bar">
+            <div class="setup-terminal-dot red"></div>
+            <div class="setup-terminal-dot yellow"></div>
+            <div class="setup-terminal-dot green"></div>
+            <span class="setup-terminal-title">Terminal — Install IDE (optional)</span>
+          </div>
+          <pre><span class="comment"># Install Arduino IDE via Homebrew Cask</span>
+<span class="prompt">$</span> <span class="cmd">brew install --cask arduino-ide</span>
+
+<span class="comment"># Or download from https://www.arduino.cc/en/software</span></pre>
+        </div>
+        <div class="setup-note">💡 The CLI is faster for batch work; the IDE is nicer for editing and serial monitoring.</div>
+      </div>
+
     </div>
   </section>
 
