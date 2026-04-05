@@ -890,33 +890,8 @@
         </div>
       </div>
 
-      <div class="pinout-card">
-        <pre>
-   ┌──────────────────────┐
-   │      ARDCORE          │
-   │    SnazzyFX           │
-   │                       │
-   │  ┌──────┐  ┌──────┐  │
-   │  │KNOB 1│  │KNOB 2│  │
-   │  │  A0  │  │  A1  │  │
-   │  └──────┘  └──────┘  │
-   │                       │
-   │  ○ A2    ○ A3    ○ CLK│
-   │  CV IN   CV IN   TRIG │
-   │                       │
-   │  ◉ DAC   ○ D0    ○ D1│
-   │  8-bit   GATE   GATE │
-   │  out     out    out   │
-   │                       │
-   │  ATmega328P  16MHz    │
-   │  2KB SRAM   32KB Flash│
-   └──────────────────────┘
-
-   DAC Output:
-   PORTB bits 0-4 = Arduino pins 8-12
-   PORTD bits 5-7 = Arduino pins 5-7
-   Combined = 8-bit value (0-255)
-        </pre>
+      <div class="pinout-card" style="padding:0;overflow:hidden;">
+        <img src="Ardcor.jpg" alt="SnazzyFX ArdCore eurorack module" style="width:100%;display:block;border-radius:16px;" />
       </div>
     </div>
   </section>
