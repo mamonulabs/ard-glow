@@ -768,47 +768,72 @@
     </div>
 
     <div class="hero-module">
-      <svg viewBox="0 0 240 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 240 400" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- Module panel -->
-        <rect x="10" y="10" width="220" height="340" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+        <rect x="10" y="10" width="220" height="380" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
         <!-- Title -->
-        <text x="120" y="45" text-anchor="middle" font-family="Syne, sans-serif" font-size="18" font-weight="800" fill="#d97706">ARDCORE</text>
-        <text x="120" y="62" text-anchor="middle" font-family="DM Mono, monospace" font-size="9" fill="#666">ATmega328P</text>
+        <text x="120" y="42" text-anchor="middle" font-family="Syne, sans-serif" font-size="18" font-weight="800" fill="#d97706">ARDCORE</text>
+        <text x="120" y="58" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#555">SnazzyFX · ATmega328P</text>
+
         <!-- Knobs -->
-        <circle cx="75" cy="105" r="22" fill="#111" stroke="#333" stroke-width="1"/>
-        <circle cx="75" cy="105" r="16" fill="#1e1e1e"/>
-        <line x1="75" y1="105" x2="75" y2="87" stroke="#d97706" stroke-width="2" stroke-linecap="round">
-          <animateTransform attributeName="transform" type="rotate" from="0 75 105" to="360 75 105" dur="8s" repeatCount="indefinite"/>
+        <circle cx="75" cy="100" r="24" fill="#111" stroke="#333" stroke-width="1"/>
+        <circle cx="75" cy="100" r="17" fill="#1e1e1e"/>
+        <line x1="75" y1="100" x2="75" y2="81" stroke="#d97706" stroke-width="2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 75 100" to="360 75 100" dur="8s" repeatCount="indefinite"/>
         </line>
-        <text x="75" y="138" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 1</text>
-        <circle cx="165" cy="105" r="22" fill="#111" stroke="#333" stroke-width="1"/>
-        <circle cx="165" cy="105" r="16" fill="#1e1e1e"/>
-        <line x1="165" y1="105" x2="165" y2="87" stroke="#00c48c" stroke-width="2" stroke-linecap="round">
-          <animateTransform attributeName="transform" type="rotate" from="0 165 105" to="-360 165 105" dur="12s" repeatCount="indefinite"/>
+        <text x="75" y="135" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 1</text>
+
+        <circle cx="165" cy="100" r="24" fill="#111" stroke="#333" stroke-width="1"/>
+        <circle cx="165" cy="100" r="17" fill="#1e1e1e"/>
+        <line x1="165" y1="100" x2="165" y2="81" stroke="#00c48c" stroke-width="2" stroke-linecap="round">
+          <animateTransform attributeName="transform" type="rotate" from="0 165 100" to="-360 165 100" dur="12s" repeatCount="indefinite"/>
         </line>
-        <text x="165" y="138" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 2</text>
-        <!-- Jacks row 1 -->
-        <circle cx="55" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
-        <text x="55" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#666">A2</text>
-        <circle cx="105" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
-        <text x="105" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#666">A3</text>
-        <circle cx="155" cy="180" r="10" fill="#0e0e0e" stroke="#444" stroke-width="1"/>
-        <text x="155" y="200" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">CLK</text>
-        <!-- Jacks row 2 -->
-        <circle cx="55" cy="240" r="10" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
-        <text x="55" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">DAC</text>
-        <circle cx="105" cy="240" r="10" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
-        <text x="105" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D0</text>
-        <circle cx="155" cy="240" r="10" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
-        <text x="155" y="260" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D1</text>
-        <!-- Waveform animation -->
-        <rect x="35" y="280" width="170" height="50" rx="6" fill="#111" stroke="#222" stroke-width="1"/>
-        <polyline id="wave" fill="none" stroke="#d97706" stroke-width="1.5" opacity="0.7"
-          points="40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298">
+        <text x="165" y="135" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 2</text>
+
+        <!-- Divider: INPUTS -->
+        <line x1="30" y1="155" x2="210" y2="155" stroke="#333" stroke-width="0.5"/>
+        <text x="120" y="170" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#555" letter-spacing="2">INPUTS</text>
+
+        <!-- Input jacks: A2, A3, CLK -->
+        <circle cx="55" cy="200" r="11" fill="#0e0e0e" stroke="#555" stroke-width="1"/>
+        <circle cx="55" cy="200" r="4" fill="#222"/>
+        <text x="55" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#999">A2 IN</text>
+
+        <circle cx="120" cy="200" r="11" fill="#0e0e0e" stroke="#555" stroke-width="1"/>
+        <circle cx="120" cy="200" r="4" fill="#222"/>
+        <text x="120" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#999">A3 IN</text>
+
+        <circle cx="185" cy="200" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
+        <circle cx="185" cy="200" r="4" fill="#222"/>
+        <text x="185" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">CLK IN</text>
+
+        <!-- Divider: OUTPUTS -->
+        <line x1="30" y1="240" x2="210" y2="240" stroke="#333" stroke-width="0.5"/>
+        <text x="120" y="255" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#555" letter-spacing="2">OUTPUTS</text>
+
+        <!-- Output jacks: DAC×2, D0, D1 -->
+        <circle cx="45" cy="285" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
+        <circle cx="45" cy="285" r="4" fill="#333"/>
+        <circle cx="95" cy="285" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
+        <circle cx="95" cy="285" r="4" fill="#333"/>
+        <text x="70" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">DAC ×2</text>
+
+        <circle cx="150" cy="285" r="11" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
+        <circle cx="150" cy="285" r="4" fill="#333"/>
+        <text x="150" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D0</text>
+
+        <circle cx="195" cy="285" r="11" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
+        <circle cx="195" cy="285" r="4" fill="#333"/>
+        <text x="195" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D1</text>
+
+        <!-- Waveform display -->
+        <rect x="35" y="325" width="170" height="46" rx="6" fill="#111" stroke="#222" stroke-width="1"/>
+        <polyline fill="none" stroke="#d97706" stroke-width="1.5" opacity="0.7"
+          points="40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342">
           <animate attributeName="points" dur="3s" repeatCount="indefinite"
-            values="40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298;
-                    40,298 55,312 65,290 80,310 95,295 110,315 125,290 140,308 155,292 170,312 185,295 195,305;
-                    40,305 55,290 65,315 80,295 95,310 110,288 125,312 140,292 155,308 170,290 185,305 195,298"/>
+            values="40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342;
+                    40,342 55,355 65,334 80,352 95,338 110,358 125,335 140,350 155,338 170,355 185,340 195,348;
+                    40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342"/>
         </polyline>
       </svg>
     </div>
