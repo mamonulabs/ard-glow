@@ -856,42 +856,49 @@
   <section id="hardware">
     <div class="section-label">Hardware Reference</div>
     <h2>Know your module</h2>
-    <p class="section-sub">The ArdCore is an Arduino Nano in eurorack format. Two knobs, two CV jacks, a clock input, an 8-bit DAC output, and two digital outs.</p>
+    <p class="section-sub">The ArdCore is an Arduino Nano in eurorack format. Here's what every jack and knob does.</p>
 
-    <div class="how-grid">
-      <div class="how-steps">
-        <div class="how-step">
-          <div class="step-num">K</div>
+    <div style="display:flex;justify-content:center;margin-bottom:48px;">
+      <div class="pinout-card" style="padding:24px;overflow:hidden;display:inline-block;">
+        <img src="Ardcor.jpg" alt="SnazzyFX ArdCore eurorack module" style="max-height:320px;border-radius:12px;display:block;" />
+      </div>
+    </div>
+
+    <div class="porting-grid">
+      <div class="porting-card" style="border-color:rgba(0,196,140,0.3);">
+        <div class="porting-platform" style="color:var(--green);">⬇ Inputs — what goes IN to the ArdCore</div>
+        <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
           <div>
-            <div class="step-title">Knob 1 &amp; Knob 2</div>
-            <div class="step-body">Potentiometers on A0 and A1. Read via analogRead() → 0–1023. Primary parameter controls for every sketch.</div>
+            <div class="step-title">Knob 1 &amp; Knob 2 <span style="font-size:11px;color:var(--muted);font-weight:400;">(top two knobs)</span></div>
+            <div class="step-body">Potentiometers read on A0 and A1. Each returns 0–1023. These are your primary controls — every sketch uses them for something different (speed, pitch, depth, etc).</div>
           </div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">⇥</div>
           <div>
-            <div class="step-title">CV Inputs (A2 &amp; A3)</div>
-            <div class="step-body">Analog inputs for external CV. 0–5V range mapped to 0–1023. Use for voltage control of parameters, 1V/oct pitch, etc.</div>
+            <div class="step-title">A2 &amp; A3 <span style="font-size:11px;color:var(--muted);font-weight:400;">(CV input jacks)</span></div>
+            <div class="step-body">Analog CV inputs, 0–5V → 0–1023. Patch CV from other modules here to voltage-control parameters. Often used for 1V/oct pitch, envelope CV, or modulation.</div>
           </div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">⏎</div>
           <div>
-            <div class="step-title">Clock Input</div>
-            <div class="step-body">Digital pin 2 with interrupt. Use for external clocking, trigger inputs, gate detection. Rising edge triggers ISR.</div>
-          </div>
-        </div>
-        <div class="how-step">
-          <div class="step-num">⇤</div>
-          <div>
-            <div class="step-title">DAC Output + D0 &amp; D1</div>
-            <div class="step-body">8-bit R-2R DAC on pins 5–12 via direct port writes (PORTB + PORTD). Two digital gate/trigger outputs on pins 3 &amp; 4.</div>
+            <div class="step-title">Clock In <span style="font-size:11px;color:var(--muted);font-weight:400;">(trigger/gate jack)</span></div>
+            <div class="step-body">Digital input on pin 2 with hardware interrupt. Patch a clock, trigger, or gate here. Rising edge fires an interrupt — sketches use this for tempo sync, envelope triggers, sequencer advance, etc.</div>
           </div>
         </div>
       </div>
 
-      <div class="pinout-card" style="padding:24px;overflow:hidden;display:flex;justify-content:center;">
-        <img src="Ardcor.jpg" alt="SnazzyFX ArdCore eurorack module" style="max-height:360px;border-radius:12px;" />
+      <div class="porting-card" style="border-color:rgba(217,119,6,0.3);">
+        <div class="porting-platform">⬆ Outputs — what comes OUT of the ArdCore</div>
+        <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
+          <div>
+            <div class="step-title">DAC Out <span style="font-size:11px;color:var(--muted);font-weight:400;">(main output jack)</span></div>
+            <div class="step-body"><strong>This is your main CV / audio output.</strong> An 8-bit R-2R ladder DAC built from digital pins 5–12, giving 256 voltage steps across 0–5V. Patch this to a VCA, VCO pitch, filter cutoff, mixer — whatever you want the sketch to control. Written via direct port manipulation (PORTB + PORTD) for speed.</div>
+          </div>
+          <div>
+            <div class="step-title">D0 &amp; D1 <span style="font-size:11px;color:var(--muted);font-weight:400;">(digital output jacks)</span></div>
+            <div class="step-body">Two digital gate/trigger outputs on pins 3 &amp; 4. These are on/off only (0V or 5V) — no CV, just gates. Sketches use them for clock outputs, end-of-cycle triggers, gate-high indicators, rhythm outputs, etc.</div>
+          </div>
+          <div style="background:#111;border:1px solid var(--border);border-radius:10px;padding:16px;">
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">💡 Output Expander mode</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.6;">With the optional expander board, the same 8 DAC pins become 8 individual gate outputs instead of one analog voltage. You get either the DAC <em>or</em> 8 gates — not both at once. Expander sketches are prefixed OX.</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
