@@ -1,4 +1,0 @@
-LIBRARY asctArdtoMax.mxe
-
-EXPORTS
-	main
