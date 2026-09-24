@@ -4,8 +4,8 @@ Functional index of all sketches in this repository.
 See [TUTORIAL.md](TUTORIAL.md) for development guide,
 [ardcore_exploration.md](ardcore_exploration.md) for DSP technique catalog.
 
-> **152 sketches** across 4 directories:
-> `official/` (37) · `snazzy_fx/` (92) · `community/asct/` (17) · `community/user_submitted/` (6)
+> **165 sketches** across 4 directories:
+> `official/` (37) · `snazzy_fx/` (93) · `community/asct/` (20) · `community/user_submitted/` (6)
 
 **Compile status:** ✅ = compiles · ⚠️ = fails / skipped (see `scripts/verify-ignore.txt`)
 
@@ -40,8 +40,6 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `community/asct/ASCTard001_Analytic_Geometry/`
 - ⚠️ **ASCTard009 — Phase Patterns** — Steve Reich-inspired phase pattern sequencer
   `community/asct/ASCTard009_Phase_patterns/`
-- ✅ **ACDAN1 — Depth Charge** — Random depth charge pattern generator
-  `snazzy_fx/dans_trashy_mods/ACDAN1_DepthCharge/`
 - ✅ **mem_check_** — Voltage recorder/sampler with playback
   `snazzy_fx/dans_trashy_mods/mem_check_/`
 - ⚠️ **randomRecorder** — Random recorder, samples CV into buffer *(`.pde`)*
@@ -55,7 +53,7 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
 
 ## Oscillators
 
-- ✅ **AC24 — Simple VCO** — Direct pin manipulation VCO with 1V/oct CV input
+- ✅ **AC24 — Simple VCO** — Rough square-wave VCO, about 25 semitones per volt
   `official/AC24_SimpleVCO/`
 - ✅ **AC33 — Screecher WT** — 7-waveform wavetable VCO with 1V/oct *(user port)*
   `community/user_submitted/AC33_SSQScreecherWT/`
@@ -75,22 +73,28 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH/`
 - ✅ **SIMPLEST_SAWTOOTH_mod** — Simple sawtooth oscillator, modified
   `snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH_mod/`
-- ✅ **sine** — Sine wave generator using lookup table
+- ✅ **sine** — Clocked random voltage, despite the name
   `snazzy_fx/EXPERIMENTAL_AUDIO/sine/`
 - ⚠️ **freqout_ardcore** — Frequency generator tone synthesis
   `snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/freqout_ardcore.ino`
 - ⚠️ **frequot** — Square wave tone generator with lookup table *(`.pde`)*
   `snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot/`
-- ✅ **frequot2** — Modified frequency generator
+- ✅ **frequot2** — Self-playing rising scale of square-wave notes
   `snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot2/`
 - ⚠️ **fac_fm_osc** — FM synthesizer with modulator/carrier *(`.pde`)*
   `snazzy_fx/fac_fm_osc/`
-- ⚠️ **ARDCORE_twotone_mod** — Two-tone drone synthesizer
+- ✅ **fac_fm_osc_fixed** — FM voice, 1V/oct, fixed 2026 copy of fac_fm_osc
+  `snazzy_fx/fac_fm_osc_fixed/`
+- ⚠️ **ARDCORE_twotone_mod** — Two-tone drone synthesizer (too big for the RAM)
   `snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod/`
+- ✅ **ARDCORE_twotone_mod_fixed** — Crossfading two-tone drone, fixed 2026 copy that fits
+  `snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod_fixed/`
 - ⚠️ **chiptune** — Chiptune melody player/sequencer *(`.pde`)*
   `snazzy_fx/EXPERIMENTAL_AUDIO/chiptune.pde`
-- ✅ **noiseBrother** — Sawtooth oscillator generator
+- ✅ **noiseBrother** — Buzzy folded sawtooth, identical to SIMPLEST_SAWTOOTH_mod
   `snazzy_fx/EXPERIMENTAL_AUDIO/noiseBrother/`
+- ✅ **LFO_w_slow_CPU** — Audio-rate rising sawtooth, despite the name
+  `snazzy_fx/CV-LFO_SKETCHES/LFO_w_slow_CPU/`
 
 ## LFOs
 
@@ -104,10 +108,8 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO/`
 - ✅ **ARD_SINE_LFO_smoother_rng** — Sine LFO with smoothing and range control
   `snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO_smoother_rng/`
-- ✅ **LFO_w_slow_CPU** — Triangle LFO, optimized for low CPU usage
-  `snazzy_fx/CV-LFO_SKETCHES/LFO_w_slow_CPU/`
-- ⚠️ **fac_triple_lfo** — Three independent LFOs with reset *(`.pde`)*
-  `snazzy_fx/fac_triple_lfo.pde/`
+- ✅ **fac_triple_lfo** — Three LFOs at once on the DAC, D0 and D1, with reset
+  `snazzy_fx/fac_triple_lfo/`
 
 ## Chaos / Generative
 
@@ -129,12 +131,6 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `community/user_submitted/AC37_Rungler/`
 - ✅ **ASCTard008 — Changnesia** — Outputs trigger on CV input changes
   `community/asct/ASCTard008_Changnesia/`
-- ✅ **LFSR** — Galois LFSR for noise/CV pattern generation
-  `snazzy_fx/LFSR/LFSR/`
-- ✅ **LFSR2** — LFSR variant for pattern generation
-  `snazzy_fx/LFSR/LFSR2/`
-- ✅ **LFSR32** — 32-bit LFSR pattern generator
-  `snazzy_fx/LFSR/LFSR32/`
 - ⚠️ **AC24_SimpleVCOchaos** — Simple VCO with chaotic modulation *(`.pde`)*
   `snazzy_fx/dans_trashy_mods/AC24_SimpleVCOchaos/`
 - ⚠️ **CHAOTIC_VCO2** — Chaotic voltage-controlled oscillator *(`.pde`)*
@@ -162,8 +158,12 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `official/OX01_MasterClock/`
 - ⚠️ **OX04 — 8-Way Divider** — Divide clock 1 through 8 ways simultaneously
   `official/OX04_8WayDivider/`
+- ✅ **OX04 — 8-Way Divider (fixed)** — Divide by 1 to 8 on the expander, finished 2026
+  `official/OX04_8WayDivider_fixed/`
 - ✅ **ASCTard004 — Gate Counter** — Counts clock pulses, creates toggles
   `community/asct/ASCTard004_Gate_Counter/`
+- ✅ **ASCTard004 — Gate Counter (fixed)** — Counter and toggle, every 1 to 64 clocks, fixed 2026 copy
+  `community/asct/ASCTard004_Gate_Counter_fixed/`
 - ✅ **ASCTard006 — Burst Generator** — Generates bursts of clock pulses
   `community/asct/ASCTard006_Burst_gen_ino/`
 - ✅ **ASCTard010 — Tapped Out** — Pattern/clock module with presets
@@ -220,16 +220,22 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/ANOTHER_DELAY_mod/`
 - ✅ **BLOG_DELAY_BEST** — Optimized delay with feedback and modulation
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST/`
+- ✅ **BLOG_DELAY_BEST_fixed** — All-or-nothing feedback delay, knob the right way round
+  `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST_fixed/`
 - ✅ **DELAY_ONLY** — Simple delay effect
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_ONLY/`
 - ✅ **DELAY_SMOOTH** — Smooth delay with bitcrush
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_SMOOTH/DELAY_SMOOTH/`
 - ✅ **Long_DELAY_BEST** — Extended delay for long decay times
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST/Long_DELAY_BEST/`
+- ✅ **Long_DELAY_BEST_fixed** — Clean short delay, knob the right way round
+  `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST_fixed/`
 - ✅ **reverb_prttygood** — Reverb effect with time-based modulation
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood/reverb_prttygood.ino`
 - ✅ **reverb_prttygood (v2)** — Reverb with multi-buffer approach
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood/reverb_prttygood/`
+- ✅ **reverb_prttygood_fixed** — Two echoes, input read properly, no wrapping
+  `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood_fixed/`
 - ✅ **SWIRLY_DELAY** — Delay with swirling modulation
   `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/SWIRLY_DELAY/SWIRLY_DELAY/`
 - ✅ **weird_delay** — Noisy experimental delay
@@ -246,6 +252,8 @@ See [TUTORIAL.md](TUTORIAL.md) for development guide,
   `snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr1/`
 - ✅ **waveshpr2** — Waveshaper effect processor
   `snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2/`
+- ✅ **waveshpr2_fixed** — XOR waveshaper with A1 and A2 picking the shape, fixed 2026 copy
+  `snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2_fixed/`
 - ✅ **waveshpr3** — Waveshaper distortion effect
   `snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr3/`
 - ✅ **WORKING_CRUSHER** — Bit crusher with clock-based processing
@@ -282,19 +290,37 @@ All in `snazzy_fx/BYTEBEAT_CV_and_AUDIO/`:
   `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_AudioRate/`
 - ✅ **DeadCityRadio (clocked)** — Clock-timed white noise
   `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_Clocked/`
+- ✅ **DeadCityRadio (LFO rate, fixed)** — Random stepped CV, 20ms to 2s per step, fixed 2026 copy
+  `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_LFOrate_fixed/`
+- ✅ **DeadCityRadio (audio rate, fixed)** — White noise with working smoothing, fixed 2026 copy
+  `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_AudioRate_fixed/`
+- ✅ **DeadCityRadio (clocked, fixed)** — Clock-stepped noise, fixed 2026 copy
+  `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_Clocked_fixed/`
 - ✅ **ARDCORE_NOISEMAKER** — Simple noise generator, multiplies knobs
   `snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_NOISEMAKER/`
 - ⚠️ **AC66_NOISE_BOMB** — Noise bomb with triggered playback *(`.pde`)*
   `snazzy_fx/dans_trashy_mods/AC66_NOISE_BOMB/`
 - ✅ **SDIY_ARDCORE_NOISE** — White noise generator
   `snazzy_fx/WHITE_NOISE/SDIY_ARDCORE_NOISE/`
+- ✅ **ACDAN1 — Depth Charge** — Free-running random noise and folded CV, no clock
+  `snazzy_fx/dans_trashy_mods/ACDAN1_DepthCharge/`
+- ✅ **LFSR** — 16-bit shift register noise, no controls
+  `snazzy_fx/LFSR/LFSR/`
+- ✅ **LFSR2** — 16-bit Galois shift register noise, no controls
+  `snazzy_fx/LFSR/LFSR2/`
+- ✅ **LFSR32** — 32-bit shift register noise, no controls
+  `snazzy_fx/LFSR/LFSR32/`
 
 ## Drums / Percussion
 
 - ⚠️ **fac_drums** — Lo-fi drum sample player with 8 sounds *(`.pde`)*
   `snazzy_fx/fac_drums/`
+- ✅ **fac_drums_fixed** — Eight-sound drum player, fixed 2026 copy that builds
+  `snazzy_fx/fac_drums_fixed/`
 - ⚠️ **stereo_beat_gen** — Stereo drum pattern generator
   `snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_pde/`
+- ✅ **stereo_beat_gen_fixed** — 1-bit stereo beat, builds, new-beat on A1
+  `snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_fixed/`
 
 ## Expander (Output Expander Required)
 

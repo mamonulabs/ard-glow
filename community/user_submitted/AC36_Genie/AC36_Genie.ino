@@ -100,13 +100,20 @@
 //    Analog In 2:    Input gain — scales feedback strength (0-1x)
 //    Digital Out 1:  Gate: diff-rect positive output (> 0)
 //    Digital Out 2:  Gate: diff-rect negative output (< 0)
-//    Clock In:       Hard sync — resets all neurons to zero
+//    Clock In:       Hard sync — restarts the ring from a kick
 //    Analog Out:     Diff-rect positive output (8-bit DAC)
 //
 //  Input Expander:  unused
 //  Output Expander: 8 bits of output exposed
 //
 //  Created:  04 Apr 2026  Ported from NLC VCV Rack plugin
+//  Modified: 24 Sep 2026  Start neuron 1 at full scale, at power-up and
+//                         on every clock. All three neurons share the
+//                         same Sense and Response here, so starting them
+//                         all at zero kept them identical forever and the
+//                         output stayed flat. (The NLC original has
+//                         separate controls per neuron, which breaks
+//                         that symmetry.)
 //
 //  ============================================================
 //
@@ -135,7 +142,7 @@ volatile int clkState = LOW;
 
 //  neuron outputs, stored as signed 16-bit
 //  range: -1023 to +1023 (maps to ±10V in NLC domain)
-int neuron1Out = 0;
+int neuron1Out = 1023;   // the kick: see Modified note above
 int neuron2Out = 0;
 int neuron3Out = 0;
 
@@ -161,11 +168,11 @@ void setup()
 
 void loop()
 {
-  // Hard sync: clock resets all neurons to zero, restarting
-  // the ring oscillation from a known state.
+  // Hard sync: clock resets the neurons and kicks neuron 1,
+  // restarting the ring from a known state.
   if (clkState) {
     clkState = LOW;
-    neuron1Out = 0;
+    neuron1Out = 1023;     // kick neuron 1 so the ring can start
     neuron2Out = 0;
     neuron3Out = 0;
   }

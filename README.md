@@ -1,43 +1,34 @@
 # ArdCore Sketches
 
-A unified collection of Arduino sketches for the [SnazzyFX ArdCore](http://snazzyfx.com/) eurorack module.
+Sketches for the [Snazzy FX ArdCore](http://snazzyfx.com/), the eurorack module with an Arduino Nano inside. They come from Darwin Grosse's original 20 Objects library, from Dan Snazelle and friends at Snazzy FX, and from ArdCore users.
 
-## Directory Structure
+The originals are kept as they were written, bugs included. Where a sketch had a bug worth fixing, there's a copy next to it with `_fixed` on the end, and a comment at the top of that copy says what was wrong and what changed.
 
-### `official/`
-The original 20 Objects sketch library by Darwin Grosse. Includes core modules (AC01-AC32), compound sketches (CP01-CP02), and expander sketches (OX01-OX04).
+## What's where
 
-Source: [darwingrosse/ArdCore-Code](https://github.com/darwingrosse/ArdCore-Code)
+`official/` is Darwin Grosse's 20 Objects library: AC01 to AC32, the compound sketches CP01 and CP02, and the output expander sketches OX01 to OX04. Source: [darwingrosse/ArdCore-Code](https://github.com/darwingrosse/ArdCore-Code).
 
-### `snazzy_fx/`
-Sketches from Snazzy FX and collaborators, including FAC drum machines, FM oscillators, bytebeat generators, LFSRs, and various experimental audio sketches.
+`snazzy_fx/` is the Snazzy FX folder from the same repo: Alfonso Alba's FM oscillator and drum player, bytebeats, LFSR noise, delays and a lot of Dan Snazelle's experiments.
 
-Source: [darwingrosse/ArdCore-Code](https://github.com/darwingrosse/ArdCore-Code) (Snazzy_FX directory)
+`community/asct/` is the set by Ascetic (twhiston): analytic geometry sequencer, CV scaler, gate counter, burst generator, noise, phase patterns, MIDI to gates and more. Source: [twhiston/asct-ardcore](https://github.com/twhiston/asct-ardcore).
 
-### `community/asct/`
-Sketches by Ascetic (twhiston): analytic geometry sequencer, CV scaler, gate counter, burst generator, noise generators, phase patterns, MIDI-to-gates, and more.
+`community/user_submitted/` holds sketches sent in by users: AC33 to AC38 and a VC LFO.
 
-Source: [twhiston/asct-ardcore](https://github.com/twhiston/asct-ardcore)
+`libraries/` is a placeholder with a link to Arduino's guide on installing libraries.
 
-### `community/user_submitted/`
-User-contributed sketches.
+`templates/` has `VCV_PORT_TEMPLATE.ino`, a template for porting VCV Rack modules to the ArdCore, with a checklist.
 
-### `libraries/`
-Shared Arduino libraries for ArdCore development.
+`scripts/` has the build tooling. `verify-all.sh` compiles every sketch with `arduino-cli`. Sketches listed in `verify-ignore.txt` are skipped.
 
-### `templates/`
-VCV Rack → ArdCore porting template with structured checklist and boilerplate.
+`docs/` is the website: the panel, the sketch catalog with what every control does, and the history.
 
-### `scripts/`
-Build/verify tooling. `verify-all.sh` compiles all sketches via `arduino-cli`.
+## Reading
 
-## Documentation
+- [CATALOG.md](CATALOG.md): all 165 sketches, grouped by what they do.
+- [TUTORIAL.md](TUTORIAL.md): how to write a sketch. Pins, DAC, clock interrupt, the usual patterns.
+- [ardcore_exploration.md](ardcore_exploration.md): the synthesis and DSP tricks used across the repo, with the sketch each one is in.
+- [tinydvco_to_ardcore_port.md](tinydvco_to_ardcore_port.md): how the tinydvco wavetable oscillator was moved from an ATtiny85 to the ArdCore. The result is AC33.
 
-- **[CATALOG.md](CATALOG.md)** — Functional index of all 152 sketches, grouped by category
-- **[TUTORIAL.md](TUTORIAL.md)** — ArdCore development guide (hardware, pin mapping, DAC, ISR)
-- **[ardcore_exploration.md](ardcore_exploration.md)** — DSP technique catalog for the platform
-- **[tinydvco_to_ardcore_port.md](tinydvco_to_ardcore_port.md)** — ATtiny85 → ArdCore porting guide
+## See also
 
-## See Also
-
-- [thedug/thedug_ardcore](https://github.com/thedug/thedug_ardcore) - Douglas Ferguson's sketches (arpeggiator, etc.)
+- [thedug/thedug_ardcore](https://github.com/thedug/thedug_ardcore): Douglas Ferguson's sketches, including an arpeggiator.

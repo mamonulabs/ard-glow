@@ -1,21 +1,16 @@
-# ArdCore Development Tutorial
+# Writing ArdCore Sketches
 
-A complete guide to writing sketches for the SnazzyFX ArdCore eurorack module.
-Written for developers who know Arduino basics but are new to the ArdCore hardware.
+How to write sketches for the Snazzy FX ArdCore. It assumes you've used an Arduino before and haven't used an ArdCore.
 
 ---
 
-## 1. What Is the ArdCore?
+## 1. The module
 
-The ArdCore is a eurorack modular synthesizer module built around an **Arduino Nano** (ATmega328P). It exposes the Nano's I/O as patch points on a eurorack panel: knobs, CV jacks, clock input, digital gate/trigger outputs, and an 8-bit DAC output.
+The ArdCore is an Arduino Nano (ATmega328P, 16MHz) behind a eurorack panel. The Nano's pins are wired to two knobs, two knob-and-jack inputs, a clock input, two gate outputs and an 8-bit DAC. You write a `.ino` sketch, upload it over USB, and it runs in the rack.
 
-You program it exactly like an Arduino — write a `.ino` sketch, upload via USB, and it runs in your rack.
+## 2. Pins
 
-## 2. Hardware Pin Mapping
-
-This is the single most important thing to understand. The Arduino Nano pins are wired to specific panel jacks and knobs. **Every sketch must respect this mapping or risk damaging the hardware.**
-
-### Pin Constants (copy these into every sketch)
+Every sketch in the repo starts with the same three constants:
 
 ```cpp
 const int clkIn = 2;           // digital (clock) input jack
@@ -23,37 +18,40 @@ const int digPin[2] = {3, 4};  // digital output jacks (D0, D1)
 const int pinOffset = 5;       // first DAC pin (pins 5-12 = 8-bit DAC)
 ```
 
-### What Each Pin Does
+| Arduino pin | Panel      | Direction | Notes |
+|-------------|------------|-----------|-------|
+| 2           | CLK        | input     | Interrupt 0 |
+| 3           | D0         | output    | Gate/trigger, with LED |
+| 4           | D1         | output    | Gate/trigger, with LED |
+| 5-12        | OUT (DAC)  | output    | 8-bit R-2R DAC. Pin 5 is bit 0, pin 12 is bit 7 |
+| A0          | A0 knob    | input     | 0-1023 |
+| A1          | A1 knob    | input     | 0-1023 |
+| A2          | A2 knob + jack | input | 0-1023, see below |
+| A3          | A3 knob + jack | input | 0-1023, see below |
 
-| Arduino Pin | ArdCore Function  | Direction | Type        |
-|-------------|-------------------|-----------|-------------|
-| 2           | Clock In jack     | INPUT     | Digital (interrupt-capable) |
-| 3           | Digital Out 0 (D0)| OUTPUT    | Digital gate/trigger |
-| 4           | Digital Out 1 (D1)| OUTPUT    | Digital gate/trigger |
-| 5-12        | Analog Out (DAC)  | OUTPUT    | 8-bit R-2R DAC (0-5V) |
-| A0          | Knob 1            | INPUT     | Analog 0-1023 |
-| A1          | Knob 2            | INPUT     | Analog 0-1023 |
-| A2          | Analog In 1 jack  | INPUT     | Analog 0-1023 |
-| A3          | Analog In 2 jack  | INPUT     | Analog 0-1023 |
+A2 and A3 each have a knob and a jack. With nothing plugged in, the knob sets a voltage from 0 to 5V, so it works like A0 and A1. With a cable in, the knob attenuates the incoming CV. The inputs only read 0 to 5V: anything below 0V reads as 0.
 
-### With Output Expander
+### The output expander
 
-The output expander breaks out the 8 DAC pins (5-12) as individual gate/trigger outputs. **Important:** when using the expander, the DAC output and the individual bit outputs are the _same physical pins_. Writing a value to the DAC sets all 8 bits, so you can't independently use the DAC and the expander bit outputs at the same time.
+The Snazzy FX expander puts each of the eight DAC pins on its own jack, so you get eight gates. They're the same pins as the DAC. Write a value to the DAC and all eight gates change with it, so a sketch uses one or the other.
 
-The expander also provides:
-- **Pin 11** — secondary analog output via `analogWrite(11, value)`. Requires Timer2 setup for DC output (see Section 9).
-- **Pin 13** — can be bit-banged for a crude additional output.
-- **A4, A5** — two additional analog inputs (bipolar: 0V = 512, -5V = 0, +5V = 1023). The expander knobs attenuate only — they don't provide a fixed voltage like A0/A1.
+The expander also has:
 
-### Sketch Naming Convention
+- A second analog output on pin 11, filtered through an RC network. `analogWrite(11, v)` gives a pulse train there; for a steady DC level, set Timer2 up first (section 9). Pin 11 is also DAC bit 6 and expander gate 6, so if you use this output, that bit is gone from the DAC and the gates.
+- Pin 13, which can be toggled by hand for a rough extra output.
+- A4 and A5, two more inputs. These are bipolar: -5V reads 0, +5V reads 1023, and with nothing plugged in they sit around 522. Their knobs only attenuate. They don't give a fixed voltage the way A0 to A3 do.
 
-- **AC** prefix — general ArdCore sketches (use knobs, analog in, DAC out)
-- **OX** prefix — sketches specifically for the output expander
-- **CP** prefix — compound sketches (multiple sketches selectable at boot)
+The expander tutorial in `community/asct/ASCTard000_tutorials/Ardcore_expander_tutorial/` shows all of this on a scope.
 
-## 3. The Skeleton: Minimum Viable Sketch
+### Names
 
-Every ArdCore sketch follows the same structure. Start from this:
+- **AC**: general sketches (knobs, inputs, DAC).
+- **OX**: sketches for the output expander.
+- **CP**: compound sketches, several programs in one upload, picked at power-up.
+
+## 3. A minimal sketch
+
+Start from this:
 
 ```cpp
 //  constants related to the Arduino Nano pin use
@@ -125,116 +123,120 @@ int deJitter(int v, int test)
 }
 ```
 
-**Key rules:**
-1. Always set up ALL pins in `setup()`, even ones you don't use. Leaving DAC pins floating can cause unpredictable voltages.
-2. Always initialize outputs to LOW.
-3. The clock interrupt just sets a flag — never do heavy work in the ISR.
+Three habits the official sketches all keep:
 
-## 4. Reading Inputs
+1. Set every output pin up in `setup()`, including ones you don't use, so nothing floats.
+2. Start every output LOW.
+3. Keep the interrupt routine to setting a flag. Do the work in `loop()`.
 
-### Knobs and CV Jacks
+## 4. Reading inputs
 
-All four analog inputs are read with standard `analogRead()`:
+### Knobs and jacks
+
+All four are plain `analogRead()`:
 
 ```cpp
-int knob1  = analogRead(0);  // Knob 1: 0-1023
-int knob2  = analogRead(1);  // Knob 2: 0-1023
-int cvIn1  = analogRead(2);  // Analog In jack 1: 0-1023
-int cvIn2  = analogRead(3);  // Analog In jack 2: 0-1023
+int knob1  = analogRead(0);  // A0 knob: 0-1023
+int knob2  = analogRead(1);  // A1 knob: 0-1023
+int cvIn1  = analogRead(2);  // A2 knob/jack: 0-1023
+int cvIn2  = analogRead(3);  // A3 knob/jack: 0-1023
 ```
 
-The raw range is 0-1023 (10-bit ADC). Common ways to scale it:
+The reading is 10 bits, 0 to 1023. Shifts are the usual way to scale it:
 
 ```cpp
-// Divide into N steps (e.g., 8 steps for a sequencer position)
-int step = analogRead(0) >> 7;      // 0-7  (divide by 128)
+// 8 steps, e.g. a sequencer position
+int step = analogRead(0) >> 7;      // 0-7
 
-// Divide into 16 steps
-int step = analogRead(0) >> 6;      // 0-15 (divide by 64)
+// 16 steps
+int step = analogRead(0) >> 6;      // 0-15
 
-// Divide into 32 steps
-int step = (analogRead(0) >> 5) + 1; // 1-33 (for Euclidean rhythms, etc.)
+// 32 steps, starting at 1 (Euclidean step counts etc.)
+int step = (analogRead(0) >> 5) + 1; // 1-32
 
-// Use as a boolean threshold
-int isHigh = analogRead(3) > 511;   // treat as on/off gate
+// on/off
+int isHigh = analogRead(3) > 511;
 
-// Map to a musical range (0-60 for ~5 octaves of semitones)
+// 64 rough semitones
 int note = analogRead(2) >> 4;      // 0-63
 ```
 
-### De-jittering Analog Inputs
+### deJitter
 
-Analog reads are noisy. The ArdCore convention is a `deJitter()` function that ignores small changes:
+Readings wobble by a few counts. The official sketches filter that out with `deJitter()`, which only accepts a new reading if it has moved far enough from the last one:
 
 ```cpp
 int deJitter(int v, int test)
 {
   if (abs(v - test) > 8) {
-    return v;       // significant change — accept it
+    return v;       // real change, take it
   }
-  return test;      // noise — keep old value
+  return test;      // wobble, keep the old value
 }
 ```
 
-Usage pattern — store the previous value and only update on significant change:
+Keep the last accepted value in a global:
 
 ```cpp
-int cvValue = 0;  // global: last accepted value
+int cvValue = 0;  // last accepted value
 
 void loop() {
   int raw = analogRead(2);
-  cvValue = deJitter(raw, cvValue);  // cvValue only updates on real changes
+  cvValue = deJitter(raw, cvValue);
 }
 ```
 
-**Threshold choices:** Use `> 8` for continuous CV values, `> 2` or `> 3` for values that need higher precision (like quantizers), or omit deJitter entirely for things like gate thresholds (`analogRead(3) > 511`).
+The official sketches use `> 8` for general CV and `> 2` or `> 3` where they need finer steps, like the quantizers. Gate thresholds (`analogRead(3) > 511`) don't need it.
 
-### Fast Analog Reads
+### Faster reads
 
-Standard `analogRead()` is slow (~100μs). For audio-rate sketches (VCOs, noise generators), you may need to speed up the ADC. Two approaches:
+`analogRead()` takes about 100μs. For audio-rate sketches that's too slow, and there are two ways round it.
 
-**Approach 1: Change the ADC prescaler** (used in AC24_SimpleVCO)
+**Lower the ADC prescaler** (AC24_SimpleVCO does this):
 
 ```cpp
 // In setup():
-sbi(ADCSRA, ADPS2);  // set prescaler to 16 (faster but less accurate)
+sbi(ADCSRA, ADPS2);  // prescaler 16
 cbi(ADCSRA, ADPS1);
 cbi(ADCSRA, ADPS0);
 ```
 
-Requires the macros:
+with these two macros:
+
 ```cpp
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 ```
 
-**Approach 2: Direct ADC register reading** (used in the No_analog_read tutorial)
+A read then takes about 13μs. You lose a little accuracy, which doesn't matter when the output is 8 bits.
+
+**Let the ADC run on its own** (`community/asct/ASCTard000_tutorials/No_analog_read`):
 
 ```cpp
 // In setup():
 ADCSRA = 0;
 ADCSRB = 0;
-sbi(ADMUX, REFS0);   // set reference voltage
-sbi(ADMUX, ADLAR);   // left-align: read 8 bits from ADCH only
-sbi(ADMUX, 1);       // select analog pin 2
-sbi(ADCSRA, ADPS2);  // prescaler = 32
+sbi(ADMUX, REFS0);   // AVcc reference
+sbi(ADMUX, ADLAR);   // left-align, so ADCH holds the top 8 bits
+sbi(ADMUX, 1);       // channel 2 (A2)
+sbi(ADCSRA, ADPS2);  // prescaler 32
 sbi(ADCSRA, ADPS0);
-sbi(ADCSRA, ADATE);  // enable auto-trigger
-sbi(ADCSRA, ADEN);   // enable ADC
-sbi(ADCSRA, ADSC);   // start measurements
+sbi(ADCSRA, ADATE);  // auto-trigger (free running)
+sbi(ADCSRA, ADEN);   // enable the ADC
+sbi(ADCSRA, ADSC);   // start
 
-// In loop() — no analogRead() call needed:
-int data = ADCH;     // 8-bit result, continuously updated
+// In loop(), no analogRead():
+int data = ADCH;     // latest 8-bit reading
 dacOutput(data);
 ```
 
-This gives you a continuously-running ADC. To change which pin is being read, manipulate the `ADMUX` register bits.
+The ADC keeps converting and `ADCH` always holds the latest result. To read a different pin, change the channel bits in `ADMUX`.
 
-## 5. Writing Outputs
+## 5. Outputs
 
-### The 8-Bit DAC (Analog Out)
+### The DAC
 
-The ArdCore's main analog output is an 8-bit R-2R DAC built from pins 5-12. Feed it a value from 0-255:
+The analog output is an 8-bit R-2R ladder on pins 5 to 12. Send it 0 to 255:
 
 ```cpp
 void dacOutput(byte v)
@@ -244,17 +246,15 @@ void dacOutput(byte v)
 }
 ```
 
-**How this works:** Instead of calling `digitalWrite()` 8 times (slow), this writes directly to the port registers. PORTD holds bits 0-2 of the value (on pins 5-7) and PORTB holds bits 3-7 (on pins 8-12). The bitmasks preserve other pins on those ports.
+This writes the port registers directly instead of calling `digitalWrite()` eight times. Bits 0-2 of the value go to PORTD (pins 5-7), bits 3-7 go to PORTB (pins 8-12), and the masks leave the other pins on those ports alone. Alfonso Alba wrote it, and Darwin Grosse switched the official sketches over to it in April 2012. Some of the Snazzy FX sketches still use an older bit-by-bit version, which works but is slower (see ardcore_exploration.md, 11.3).
 
-This routine is used in virtually every sketch. It's ~4x faster than the loop-based `digitalWrite` approach. **Always use this version.**
+**Tuning:** the sketches use 4 DAC steps per semitone and 48 per octave, so octaves sit at 0, 48, 96, 144, 192 and 240. The module has a trimmer to make those steps land on 1V/oct. AC01_Template outputs those six octaves on the A0 knob so you can set it.
 
-**Voltage mapping:** 0 = 0V, 255 = ~5V. One semitone ≈ 4.25 DAC steps (since 1V/octave × 5V = 60 semitones over 255 steps).
+### Gates and triggers
 
-### Digital Outputs (Gates and Triggers)
+D0 (pin 3) and D1 (pin 4) are on/off outputs.
 
-The two digital outputs (D0 on pin 3, D1 on pin 4) are used for gates and triggers.
-
-**Trigger:** A short pulse (typically 10-25ms). You set it HIGH and use a timer to turn it off:
+A trigger is a short pulse, usually 10 to 25ms. Set the pin high, note the time, and switch it off later in `loop()`:
 
 ```cpp
 // Fire a trigger on D0
@@ -269,56 +269,56 @@ if ((digState[0] == HIGH) && (millis() - digMilli[0] > trigTime)) {
 }
 ```
 
-**Gate:** A longer HIGH that stays on while a condition is true:
+A gate stays high as long as something is true:
 
 ```cpp
-// Gate ON while envelope is active
+// Gate high while the envelope is running
 if (envState != 0) {
-  digitalWrite(digPin[0], HIGH);   // gate ON
-  digitalWrite(digPin[1], LOW);    // inverse gate OFF
+  digitalWrite(digPin[0], HIGH);   // gate on
+  digitalWrite(digPin[1], LOW);    // inverse gate off
 } else {
-  digitalWrite(digPin[0], LOW);    // gate OFF
-  digitalWrite(digPin[1], HIGH);   // inverse gate ON (end-of-envelope)
+  digitalWrite(digPin[0], LOW);    // gate off
+  digitalWrite(digPin[1], HIGH);   // inverse gate on
 }
 ```
 
-**Variable-length gate:** Some sketches let a knob control gate duration:
+Some sketches set the gate length from a knob:
 
 ```cpp
-digTimes[1] = analogRead(1);  // gate time from Knob 2 (0-1023 ms)
+digTimes[1] = analogRead(1);  // gate time from A1, 0-1023 ms
 ```
 
-### Output Expander: Using DAC Pins as Individual Digital Outs
+### The expander's eight gates
 
-When using the output expander, you can address the 8 DAC pins individually to get 8 gate/trigger outputs:
+With the expander, each DAC pin is a gate you can set on its own:
 
 ```cpp
-// Using port manipulation (fast):
-(i < 5) ? PORTD |= (1 << i+3) : PORTB |= (1 << i-5);   // set HIGH
-(i < 5) ? PORTD &= ~(1 << i+3) : PORTB &= ~(1 << i-5); // set LOW
+// Port writes (fast). i is 0-7; bits 0-2 are on PORTD 5-7, bits 3-7 on PORTB 0-4
+(i < 3) ? PORTD |= (1 << (i + 5)) : PORTB |= (1 << (i - 3));   // high
+(i < 3) ? PORTD &= ~(1 << (i + 5)) : PORTB &= ~(1 << (i - 3)); // low
 
-// Or using digitalWrite (simpler but slower):
+// Or digitalWrite (simpler, slower)
 digitalWrite(pinOffset + i, HIGH);
 digitalWrite(pinOffset + i, LOW);
 ```
 
-**Remember:** You cannot use the DAC and individual bit outputs at the same time — they are the same pins. Choose one approach per sketch.
+These are the DAC pins, so pick either the DAC or the gates for a given sketch.
 
-## 6. Clock Input and Interrupts
+## 6. The clock input
 
-The clock input jack is on pin 2, which supports hardware interrupts. This is the standard pattern:
+CLK is on pin 2, which has a hardware interrupt. The standard pattern:
 
 ```cpp
 volatile int clkState = LOW;
 
 void setup() {
   pinMode(clkIn, INPUT);
-  attachInterrupt(0, isr, RISING);  // Interrupt 0 = pin 2
+  attachInterrupt(0, isr, RISING);  // interrupt 0 = pin 2
 }
 
 void isr()
 {
-  clkState = HIGH;  // just set the flag — do nothing else!
+  clkState = HIGH;  // set the flag and leave
 }
 
 void loop()
@@ -326,31 +326,30 @@ void loop()
   if (clkState == HIGH) {
     clkState = LOW;
 
-    // --- Do your clocked work here ---
+    // --- clocked work goes here ---
   }
 }
 ```
 
-**Critical rules:**
-1. The ISR must be **fast**. Just set a flag and return. Never call `analogRead()`, `Serial.print()`, or `delay()` inside an ISR.
-2. The `clkState` variable must be declared `volatile` because it's modified inside the interrupt.
-3. Always reset `clkState = LOW` at the start of your clock-handling block, not at the end.
+- Keep the interrupt routine short. No `analogRead()`, `Serial.print()` or `delay()` in it.
+- `clkState` is changed inside the interrupt, so it has to be `volatile`.
+- Clear `clkState` at the start of the block, not the end, so a clock that arrives while you're working isn't lost.
 
-### Interrupt Modes
+### RISING or CHANGE
 
-Most sketches use `RISING` — trigger on the rising edge of the clock signal. Some sketches use `CHANGE` (triggers on both rising and falling edges) for things like tracking gate state:
+Most sketches use `RISING`, which fires on the front edge of the clock. `CHANGE` fires on both edges, which is useful for following a gate:
 
 ```cpp
 attachInterrupt(0, isr, CHANGE);
 
 void isr() {
-  clkState = !clkState;  // toggles with each edge
+  clkState = !clkState;  // flips on every edge
 }
 ```
 
-### Internal Clocking
+### Internal clock
 
-Some sketches generate their own clock using `millis()` timing, with the external clock as an override:
+Some sketches run their own clock off `millis()` and hand over to CLK when the knob is fully clockwise:
 
 ```cpp
 unsigned long prevTiming = 0;
@@ -362,40 +361,39 @@ void loop() {
   // External clock
   if (clkState == HIGH) {
     clkState = LOW;
-    if (interval >= 1270) {     // knob fully CW = external-only mode
+    if (interval >= 1270) {     // knob fully clockwise = external only
       doStep = 1;
     }
   }
 
-  // Internal timer
+  // Internal clock
   if ((interval < 1270) && ((millis() - prevTiming) > interval)) {
     prevTiming = millis();
     doStep = 1;
   }
 
   if (doStep) {
-    // --- advance your sequence, LFO, etc. ---
+    // --- step the sequence, LFO, etc. ---
   }
 
-  // Read speed from knob
+  // Speed from the A0 knob
   interval = (((1023 - analogRead(0)) >> 4) * 20) + 30;
 }
 ```
 
-## 7. Common Patterns
+## 7. Common patterns
 
-### Pattern: Note Quantization
+### Quantizing to notes
 
-Converting a raw 0-1023 analog read into musically useful note values:
+The quick way is a shift:
 
 ```cpp
-// Simple: divide into ~64 steps (approximately 0-5V range in semitones)
 int quantNote(int v) {
   return v >> 4;  // 0-63
 }
 ```
 
-For precise quantization, use a lookup table that maps ADC values to exact note boundaries:
+That gives steps of 16 counts. A semitone on the input is about 17 counts (1023 over 60 semitones), so the steps drift away from the notes as you go up. AC02_Quantizer uses a table of the boundaries instead. Each entry sits half a semitone below a note, so the input rounds to the nearest one:
 
 ```cpp
 const int qArray[61] = {
@@ -414,24 +412,25 @@ int vQuant(int v) {
       tmp = i;
     }
   }
-  return tmp;  // returns 0-60 (semitone number)
+  return tmp;  // 0-60, the semitone number
 }
 ```
 
-To output a quantized note on the DAC:
+Then out to the DAC at 4 steps per semitone:
+
 ```cpp
-byte outValue = vQuant(analogRead(2));  // 0-60 semitone
-outValue += transpose;                   // add transposition
-dacOutput(outValue << 2);               // scale to 0-255 range
+byte outValue = vQuant(analogRead(2));  // 0-60
+outValue += transpose;
+dacOutput(outValue << 2);               // 0-240
 ```
 
-### Pattern: Clock Division
+### Clock division
 
-Count clock ticks and fire on every Nth tick:
+Count clocks and fire on every Nth:
 
 ```cpp
 int clockCount = 0;
-int division = 4;  // fire every 4th clock
+int division = 4;  // every 4th clock
 
 void loop() {
   if (clkState == HIGH) {
@@ -440,14 +439,14 @@ void loop() {
 
     if (clockCount >= division) {
       clockCount = 0;
-      // --- fire trigger ---
+      // fire a trigger
       digState[0] = HIGH;
       digMilli[0] = millis();
       digitalWrite(digPin[0], HIGH);
     }
   }
 
-  division = (analogRead(0) >> 6) + 1;  // knob selects 1-16
+  division = (analogRead(0) >> 6) + 1;  // 1-16 from the knob
 
   // trigger turn-off
   if ((digState[0] == HIGH) && (millis() - digMilli[0] > trigTime)) {
@@ -457,9 +456,9 @@ void loop() {
 }
 ```
 
-### Pattern: Step Sequencer
+### Step sequencer
 
-Store values in an array, advance on clock:
+Values in an array, one step per clock:
 
 ```cpp
 int seqValue[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -478,45 +477,44 @@ void loop() {
     digitalWrite(digPin[0], HIGH);
   }
 
-  // Record: use knob2 to select step, knob1 to set value
-  int editStep = analogRead(1) >> 7;     // 0-7
+  // Edit: A1 picks the step, A0 sets its value
+  int editStep = analogRead(1) >> 7;       // 0-7
   seqValue[editStep] = analogRead(0) >> 2; // 0-255
 
   // trigger turn-off...
 }
 ```
 
-### Pattern: Envelope Generator (Attack-Decay)
+### Attack-decay envelope
 
-Use a float accumulator with per-loop increment:
+A float that goes up by one amount per loop and down by another (AC25_VCAREnvelope):
 
 ```cpp
-int envState = 0;       // 0=off, 1=rising, -1=falling
+int envState = 0;       // 0 = off, 1 = rising, -1 = falling
 float currValue = 0.0;
 float riseValue = 0.0;
 float fallValue = 0.0;
 
 void loop() {
-  // Trigger starts the envelope
+  // A clock starts the envelope
   if (clkState) {
     clkState = 0;
     envState = 1;
   }
 
-  // Accumulate
   if (envState == 1) {
     currValue += riseValue;
   } else if (envState == -1) {
     currValue -= fallValue;
   }
 
-  // Peak transition
+  // Top reached, start falling
   if (currValue > 255.0) {
     currValue = 255.0;
     envState = -1;
   }
 
-  // End transition
+  // Bottom reached, stop
   if (currValue < 0.0) {
     currValue = 0.0;
     envState = 0;
@@ -524,7 +522,7 @@ void loop() {
 
   dacOutput((byte)currValue);
 
-  // Read knobs for attack/decay times
+  // Attack and decay times, knob plus CV
   int riseSetting = analogRead(0) + analogRead(2) + 5;
   int fallSetting = analogRead(1) + analogRead(3) + 5;
   riseValue = 255.0 / riseSetting;
@@ -532,15 +530,15 @@ void loop() {
 }
 ```
 
-The `+ 5` prevents division by zero. Rise/fall values represent "DAC steps per loop iteration" — smaller values = slower envelope.
+The `+ 5` stops a divide by zero. `riseValue` and `fallValue` are DAC steps per pass through `loop()`, so smaller means slower.
 
-### Pattern: LFO with Waveshaping
+### Shaped LFO
 
-A triangle LFO using millisecond-based timing:
+AC19_ShapedLFO counts from 0 to 511 and folds the top half back down, which gives a triangle. The count only ever goes up; it just goes up at one rate in the first half and another in the second, and that's what skews the shape:
 
 ```cpp
 float currValue = 0.0;
-int currDir = 1;          // 1=up, 0=down
+int currDir = 1;          // 1 = first half (rising output), 0 = second half
 unsigned long lastMillis = 0;
 float upStep = 1.0;
 float downStep = 1.0;
@@ -549,22 +547,17 @@ void loop() {
   unsigned long now = millis();
   int elapsed = now - lastMillis;
 
+  currDir = (currValue > 255.0) ? 0 : 1;
+
   if (currDir) {
     currValue += elapsed * upStep;
   } else {
-    currValue -= elapsed * downStep;  // downStep is a positive number
+    currValue += elapsed * downStep;
   }
 
-  // Wrap around: 0 → 255 → 511 → back to 0
   while (currValue > 511.0) currValue -= 511.0;
 
-  if (currValue > 255.0) {
-    currDir = 0;
-  } else {
-    currDir = 1;
-  }
-
-  // Output the triangle
+  // Fold: 0-255 goes up, 256-511 comes back down
   if (currValue <= 255.0) {
     dacOutput((byte)currValue);
   } else {
@@ -573,7 +566,7 @@ void loop() {
 
   lastMillis = now;
 
-  // Read speed and warp from knobs
+  // Speed on A0, shape on A1
   float msPerCycle = ((1023 - analogRead(0)) + 20) * 3.0;
   float warpFactor = ((analogRead(1) >> 4) + 1) / 65.0;
   upStep = 255.0 / (msPerCycle * warpFactor);
@@ -581,14 +574,14 @@ void loop() {
 }
 ```
 
-### Pattern: Euclidean Rhythm Generator
+### Euclidean rhythms
 
-Distribute N pulses evenly across M steps:
+Spread N hits over M steps as evenly as possible (AC30_DualEuclidean):
 
 ```cpp
 int euArray[32];   // the pattern
 int steps = 8;     // total steps
-int pulses = 3;    // active hits
+int pulses = 3;    // hits
 
 void euCalc() {
   for (int i = 0; i < 32; i++) euArray[i] = 0;
@@ -604,34 +597,34 @@ void euCalc() {
 
   int loc = 0;
   for (int i = 0; i < pulses; i++) {
-    euArray[loc++] = 1;               // place a pulse
+    euArray[loc++] = 1;               // a hit
     for (int j = 0; j < ppc; j++)
-      euArray[loc++] = 0;             // fill gaps
+      euArray[loc++] = 0;             // the gap after it
     if (i < rmd)
-      euArray[loc++] = 0;             // distribute remainder
+      euArray[loc++] = 0;             // one extra gap for the first rmd hits
   }
 }
 ```
 
-Then on each clock tick:
+Then on each clock:
+
 ```cpp
 int myPulse = currStep % steps;
 if (euArray[myPulse]) {
-  // fire trigger
+  // fire a trigger
 }
 currStep++;
 ```
 
-## 8. Using EEPROM for Persistent Storage
+## 8. Saving to EEPROM
 
-The ATmega328P has 1KB of EEPROM. Use it to save sequences or settings between power cycles:
+The ATmega328P has 1KB of EEPROM, which keeps its contents with the power off. AC27_101SEQ saves its sequence there, with a four-byte tag at the start so it can tell its own data from whatever was there before:
 
 ```cpp
 #include <EEPROM.h>
 
-// Use a tag to verify data integrity
 void writeEEPROM() {
-  EEPROM.write(0, 'A');   // tag bytes
+  EEPROM.write(0, 'A');   // tag
   EEPROM.write(1, 'C');
   EEPROM.write(2, '2');
   EEPROM.write(3, '7');
@@ -645,7 +638,7 @@ void writeEEPROM() {
 void readEEPROM() {
   if (EEPROM.read(0) != 'A' || EEPROM.read(1) != 'C' ||
       EEPROM.read(2) != '2' || EEPROM.read(3) != '7') {
-    // No valid data — initialize to defaults
+    // no saved data, use defaults
     loopMax = 0;
     for (int i = 0; i <= MAXPOS; i++) recordBuffer[i] = 0;
     return;
@@ -658,23 +651,23 @@ void readEEPROM() {
 }
 ```
 
-**EEPROM has limited write cycles (~100,000).** Don't write on every loop iteration. Only write when the user explicitly saves (e.g., when switching from record to play mode).
+Each EEPROM cell is good for about 100,000 writes. Save when something happens, like switching from record to play, not on every pass through `loop()`.
 
-## 9. Timer Interrupts for Audio Rate
+## 9. Timer interrupts for audio
 
-For audio-rate output (noise generators, oscillators), `loop()` is too slow and variable. Use a timer interrupt to get consistent sample output:
+`loop()` runs at an uneven speed, which you hear as pitch wobble. For audio, output samples from a timer interrupt instead. This is the Dead City Radio setup: `loop()` fills a buffer, and the Timer1 interrupt plays it out:
 
 ```cpp
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 
-// Buffer approach: fill in loop(), output in ISR
+// loop() fills the buffer, the interrupt plays it
 const int bufferSize = 128;
 float noizBuffer[bufferSize];
 int bufferPointer = 0;
 boolean buffFlag = false;
 
-// Timer1 ISR — outputs samples at a fixed rate
+// Timer1 interrupt: one sample each time
 ISR(TIMER1_COMPA_vect) {
   int v = (noizBuffer[bufferPointer] + 1) * 127;
 
@@ -684,32 +677,34 @@ ISR(TIMER1_COMPA_vect) {
   bufferPointer++;
   if (bufferPointer >= bufferSize) {
     bufferPointer = 0;
-    buffFlag = true;  // signal loop() to refill buffer
+    buffFlag = true;  // tell loop() to refill
   }
 }
 
 void interruptSetup() {
-  cli();                              // disable interrupts
+  cli();                              // interrupts off
   TCCR1A = 0;
   TCCR1B = 0;
-  OCR1A = 200;                        // compare value (sets pitch)
-  TCCR1A |= (1 << WGM10);            // phase & freq correct PWM
+  OCR1A = 200;                        // compare value, sets the rate
+  TCCR1A |= (1 << WGM10);             // phase and frequency correct PWM
   TCCR1B |= (1 << WGM13);
-  TCCR1B |= (1 << CS11);             // prescaler = 8
-  TIMSK1 |= (1 << OCIE1A);           // enable compare interrupt
-  sei();                              // enable interrupts
+  TCCR1B |= (1 << CS11);              // prescaler 8
+  TIMSK1 |= (1 << OCIE1A);            // compare interrupt on
+  sei();                              // interrupts on
 }
 ```
 
-Change `OCR1A` at runtime to control pitch. Lower = higher frequency.
+Change `OCR1A` while it runs to change the rate. Lower is faster.
 
-### Timer2 Setup for Expander Pin 11 DC Output
+Timer0 runs `millis()` and `delay()`, so leave it alone if you need those. AC33 uses Timer2 for its sample clock for that reason.
 
-Pin 11 uses Timer2 for PWM. The default PWM frequency produces a pulse train, but the expander's RC filter is tuned for audio. To output a clean DC voltage, configure Timer2 for phase-correct PWM at ~31kHz:
+### Timer2 for a DC level on pin 11
+
+With the expander, `analogWrite(11, v)` gives a PWM pulse train, and the RC filter on that output is tuned for audio. To get a steady voltage out of it, run Timer2 at about 31kHz phase-correct PWM first (from Dan Snazelle, via the expander tutorial):
 
 ```cpp
 void Setup_timer2() {
-  sbi(TCCR2B, CS20);   // prescaler = 1
+  sbi(TCCR2B, CS20);   // prescaler 1
   cbi(TCCR2B, CS21);
   cbi(TCCR2B, CS22);
   cbi(TCCR2A, COM2A0);
@@ -719,12 +714,14 @@ void Setup_timer2() {
   cbi(TCCR2B, WGM22);
 }
 
-// Then use: analogWrite(11, value);  // 0-255
+// then: analogWrite(11, value);  // 0-255
 ```
 
-## 10. Port Manipulation Reference
+Remember pin 11 is DAC bit 6. Once it's a PWM output, `dacOutput()` can't set that bit.
 
-Direct port manipulation is much faster than `digitalWrite()`. Here's the mapping:
+## 10. Ports
+
+The pin-to-port map:
 
 ```
 PORTD bits:  7    6    5    4    3    2    1    0
@@ -738,48 +735,53 @@ PORTB bits:  5    4    3    2    1    0
              ---   DAC   DAC   DAC   DAC  DAC
 ```
 
-**DDRx** sets direction (1=output, 0=input). **PORTx** sets output value. **PINx** reads input.
+`DDRx` sets direction (1 = output). `PORTx` sets outputs. `PINx` reads inputs.
 
-The fast DAC routine:
+The DAC write again:
+
 ```cpp
-PORTB = (PORTB & B11100000) | (v >> 3);    // bits 3-7 of value → PORTB pins 0-4
-PORTD = (PORTD & B00011111) | ((v & B00000111) << 5);  // bits 0-2 → PORTD pins 5-7
+PORTB = (PORTB & B11100000) | (v >> 3);                // value bits 3-7 -> PORTB 0-4
+PORTD = (PORTD & B00011111) | ((v & B00000111) << 5);  // value bits 0-2 -> PORTD 5-7
 ```
 
-To set up ports directly (instead of `pinMode` loops):
+Setting the ports up directly instead of with `pinMode` loops:
+
 ```cpp
-DDRD = DDRD | B11111000;  // pins 3-7 as output (preserves 0-2)
-DDRB = B111111;           // pins 8-13 as output
+DDRD = DDRD | B11111000;  // pins 3-7 as outputs, 0-2 left alone
+DDRB = B111111;           // pins 8-13 as outputs
 PORTD = B00000000;        // all low
 PORTB = B000000;          // all low
 ```
 
-## 11. Memory and Performance Constraints
+## 11. Memory and speed
 
 The ATmega328P has:
-- **32KB flash** (program space) — sketches rarely exceed a few KB
-- **2KB SRAM** — this is the real constraint
-- **1KB EEPROM** — for persistent storage
 
-### SRAM Tips
-- Large lookup tables should use `PROGMEM` if they're constant
-- Avoid `String` objects — use `char[]`
-- Float arrays eat SRAM fast (4 bytes each). A `float[128]` buffer = 512 bytes = 25% of SRAM
-- Use `byte` (0-255) instead of `int` (2 bytes) where possible
-- `Serial.begin(9600)` itself uses SRAM for buffers. Remove it in production sketches.
+- 32KB of flash for the program. Most sketches use a few KB.
+- 2KB of SRAM for variables. This is the one that runs out.
+- 1KB of EEPROM.
 
-### Loop Speed
-- `analogRead()` takes ~100μs. Four reads = ~400μs = 2.5kHz effective loop rate
-- `dacOutput()` via port manipulation is ~1μs
-- `digitalWrite()` is ~5μs per call
-- `Serial.print()` is very slow — remove from production code
-- For audio-rate work, skip `analogRead()` in most loop iterations or use direct ADC reading
+### Saving SRAM
+
+- Put constant tables in flash with `PROGMEM`.
+- Use `char[]`, not `String`.
+- Floats are 4 bytes. A `float[128]` buffer is 512 bytes, a quarter of the SRAM.
+- Use `byte` instead of `int` where 0-255 is enough.
+- `Serial` has its own buffers. Take it out when you're done debugging.
+
+### Rough timings
+
+- `analogRead()`: about 100μs. Four of them per loop caps you at about 2.5kHz.
+- `dacOutput()` with port writes: about 1μs.
+- `digitalWrite()`: about 5μs.
+- `Serial.print()`: slow. Take it out when you're done.
+- For audio, read the knobs every few passes instead of every pass, or let the ADC free-run (section 4).
 
 ## 12. Debugging
 
 ### Serial Monitor
 
-Most sketches include `Serial.begin(9600)` in setup. Use the Arduino IDE's Serial Monitor to print values:
+About half of the official sketches call `Serial.begin(9600)` in `setup()`. Print values and watch them in the Serial Monitor:
 
 ```cpp
 Serial.print(analogRead(0));
@@ -787,19 +789,22 @@ Serial.print('\t');
 Serial.println(analogRead(1));
 ```
 
-**Remove or comment out `Serial.print()` calls in production.** They slow down the loop significantly and use SRAM.
+The DATA LEDs on the panel flicker while USB is sending. Comment the prints out when you're done: they slow the loop down and use SRAM.
 
-### The Template Sketch as a Diagnostic
+### AC01_Template as a test
 
-Upload `official/AC01_Template` to verify your hardware:
-1. Connect OUT to an oscillator — tune with the A0 knob
-2. Patch a clock into CLK — verify D0 LED flashes
-3. Turn A1 — verify D1 divides the clock
-4. Open Serial Monitor — verify A0-A3 readings change as expected
+`official/AC01_Template` is the module's test program. Its header lists the steps:
 
-## 13. Sketch Header Convention
+1. Patch OUT into an oscillator's pitch input.
+2. With A0 fully down, tune the oscillator.
+3. Turn A0 through its six octaves and set the ArdCore's trimmer until they're in tune.
+4. Patch a clock into CLK. The D0 LED should flash and D0 should send triggers.
+5. Turn A1. D1 should divide the clock, and its LED should follow the jack.
+6. Open the Serial Monitor and turn A0 to A3 (or feed A2 and A3 a voltage). Each should read 0 fully anticlockwise and 1023 fully clockwise.
 
-Every sketch should have a descriptive header documenting all I/O usage:
+## 13. The header
+
+The official sketches all open with the same header listing every control. Use it: when you pick the module up months later, it tells you what everything does.
 
 ```cpp
 //  ============================================================
@@ -827,17 +832,15 @@ Every sketch should have a descriptive header documenting all I/O usage:
 //  ============================================================
 ```
 
-This header format is consistent across the entire codebase. It's especially important for eurorack use — when you're performing live, you need to know what each knob and jack does at a glance.
+## 14. Compound sketches
 
-## 14. Compound Sketches
-
-A compound sketch packs multiple programs into one `.ino` and selects which one runs based on the A0 knob position at boot time:
+A compound sketch holds several programs and picks one from the A0 knob at power-up (CP01 and CP02):
 
 ```cpp
 int sketchVar = -1;
 
 void setup() {
-  sketchVar = analogRead(0) >> 8;  // 0-3 from knob position
+  sketchVar = analogRead(0) >> 8;  // 0-3 from the knob
 
   // ... standard pin setup ...
 
@@ -861,41 +864,41 @@ void loop() {
 }
 ```
 
-Each sub-sketch gets its own `setup_N()` and `loop_N()` functions. Global variables are shared but you can prefix them to avoid confusion. This is useful for packing related utilities into a single upload.
+Each program has its own `setup_N()` and `loop_N()`. Globals are shared, so give each program's variables a prefix. Set the knob, power up, and you get that program without re-uploading.
 
-## 15. Voltage and Musical Conventions
+## 15. Voltages
 
-The eurorack standard uses **1 volt per octave** for pitch CV:
+Pitch in eurorack is 1V per octave: 0V is the bottom note, 1V is an octave up, 5V is five octaves up.
 
-- 0V = lowest note
-- 1V = one octave up (12 semitones)
-- 5V = five octaves up (60 semitones)
+On the ArdCore:
 
-With the 8-bit DAC (0-255 = 0-5V):
-- 1 semitone ≈ 4.25 DAC steps (255 / 60)
-- 1 octave ≈ 51 DAC steps (255 / 5)
-- Octave boundaries: 0, 48, 96, 144, 192, 240
+- 4 DAC steps per semitone, 48 per octave.
+- Octaves at 0, 48, 96, 144, 192, 240. The top of the DAC, 255, is a bit over 5 octaves.
+- The trimmer sets the scale (section 12).
 
-For triggers and gates:
-- Trigger: short pulse, typically 10-25ms HIGH
-- Gate: sustained HIGH for a musically meaningful duration
-- HIGH threshold for input detection: typically `> 511` (half of 1023)
+On the input side, 0-5V reads 0-1023, so a semitone is about 17 counts.
 
-## 16. Quick Reference: Useful Bit-Shift Shortcuts
+Gates and triggers:
+
+- Trigger: a short high pulse, usually 10-25ms.
+- Gate: high for as long as the note or event lasts.
+- Reading a gate on an input: `> 511` (about 2.5V) is the usual threshold.
+
+## 16. Shift cheat sheet
 
 | Operation | Code | Result |
 |-----------|------|--------|
-| Divide 0-1023 into 8 steps | `val >> 7` | 0-7 |
-| Divide 0-1023 into 16 steps | `val >> 6` | 0-15 |
-| Divide 0-1023 into 32 steps | `val >> 5` | 0-31 |
-| Divide 0-1023 into 64 steps | `val >> 4` | 0-63 |
-| Scale 0-63 to 0-252 (DAC) | `val << 2` | 0-252 |
-| Scale 0-1023 to 0-255 (DAC) | `val >> 2` | 0-255 |
-| Boolean from analog | `val > 511` | true/false |
+| 0-1023 into 8 steps | `val >> 7` | 0-7 |
+| 0-1023 into 16 steps | `val >> 6` | 0-15 |
+| 0-1023 into 32 steps | `val >> 5` | 0-31 |
+| 0-1023 into 64 steps | `val >> 4` | 0-63 |
+| Semitone 0-60 to DAC | `val << 2` | 0-240 |
+| 0-1023 to DAC | `val >> 2` | 0-255 |
+| Gate from an input | `val > 511` | true/false |
 
-## 17. Complete Example: Clocked Random Voltage
+## 17. A whole sketch: clocked random voltage
 
-A minimal but complete sketch that outputs a new random voltage on each clock tick, with knob-controlled range:
+A new random voltage on every clock, with A0 setting the range:
 
 ```cpp
 //  Program: ArdCore RandomVoltage
@@ -941,18 +944,18 @@ void loop()
   if (clkState == HIGH) {
     clkState = LOW;
 
-    // Generate random value scaled by Knob 1
+    // New random value, range set by A0
     int range = analogRead(0) >> 2;       // 0-255
     byte outVal = random(range + 1);      // 0 to range
     dacOutput(outVal);
 
-    // Fire trigger on D0
+    // Trigger on D0
     digState = HIGH;
     digMilli = millis();
     digitalWrite(digPin[0], HIGH);
   }
 
-  // Trigger turn-off
+  // Trigger off
   if ((digState == HIGH) && (millis() - digMilli > trigTime)) {
     digState = LOW;
     digitalWrite(digPin[0], LOW);

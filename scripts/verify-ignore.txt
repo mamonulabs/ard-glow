@@ -26,7 +26,6 @@ snazzy_fx/EXPERIMENTAL_AUDIO/fucked_squareB/fucked_squareB.pde
 snazzy_fx/EXPERIMENTAL_AUDIO/really_messed_up_oscillator.pde
 snazzy_fx/fac_drums/fac_drums.pde
 snazzy_fx/fac_fm_osc/fac_fm_osc.pde
-snazzy_fx/fac_triple_lfo.pde/fac_triple_lfo.pde
 
 # .ino files that fail to compile (missing libs, API issues, etc.)
 community/asct/ASCTard005_LFO/ASCTard005_LFO.ino

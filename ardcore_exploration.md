@@ -1,22 +1,22 @@
-# ArdCore Exploration: Every Trick in the Repo
+# ArdCore Techniques
 
-A deep catalog of every synthesis technique, DSP trick, and clever hack found across the ArdCore sketch collection. Organised by technique, not by sketch — because the same idea often appears in different forms across multiple programs.
+The synthesis and DSP tricks used across the sketches in this repo, grouped by technique rather than by sketch, since the same idea turns up in several places. Each section names the sketch it comes from.
 
 ---
 
-## The Platform: What You're Working With
+## The platform
 
-Every sketch in this repo runs on an **ATmega328P** (Arduino Nano) at 16MHz, with:
+Every sketch here runs on an ATmega328P (Arduino Nano) at 16MHz:
 
-- **8-bit R-2R DAC** on pins 5-12 (0-255 = 0-5V output)
-- **2KB SRAM** (the real constraint — limits buffer sizes for delays, sequences, etc.)
-- **32KB flash** (plenty for code + PROGMEM lookup tables)
-- **4 analog inputs**: A0/A1 (panel knobs), A2/A3 (CV jacks, 0-5V)
-- **2 digital outputs**: pins 3 and 4 (gates/triggers)
-- **1 clock input**: pin 2 (hardware interrupt-capable)
-- **No FPU** — floating point is done in software, slowly
+- An 8-bit R-2R DAC on pins 5-12 (0-255 out).
+- 2KB of SRAM. This is what limits delay buffers and sequence lengths.
+- 32KB of flash, which leaves plenty of room for code and `PROGMEM` tables.
+- Four analog inputs: A0 and A1 are knobs, A2 and A3 are knob-and-jack inputs reading 0-5V.
+- Two digital outputs on pins 3 and 4.
+- A clock input on pin 2, with a hardware interrupt.
+- No floating-point unit. Floats work, but in software and slowly.
 
-The universal output primitive is `dacOutput(byte v)`, which writes an 8-bit value to the DAC via direct port manipulation:
+Nearly everything ends in `dacOutput(byte v)`, which writes the DAC through the port registers:
 
 ```cpp
 void dacOutput(byte v)
@@ -26,15 +26,15 @@ void dacOutput(byte v)
 }
 ```
 
-This is ~4x faster than calling `digitalWrite()` eight times. Every sketch uses it. Two writes to two port registers, both masked to preserve other pins on those ports.
+Two masked writes, one to each port, instead of eight `digitalWrite()` calls. The official sketches all use this version. Many of the Snazzy FX sketches use an older bit-by-bit one (11.3).
 
 ---
 
-## 1. Oscillator / Wave Generation Techniques
+## 1. Oscillators
 
-### 1.1 Timed-Toggle Square Wave (AC24_SimpleVCO)
+### 1.1 Timed square wave (AC24_SimpleVCO)
 
-The simplest possible VCO. A lookup table stores the half-period in microseconds for each MIDI note (128 entries, float). The loop checks `micros()` elapsed time and flips the output between 0 and 255:
+The simplest VCO. A 128-entry table holds the half-period in microseconds for each MIDI note. The loop watches `micros()` and flips the output between 0 and 255 when the time is up:
 
 ```cpp
 if ((currMicros - lastMicros) > usNote[currNote + currOffset]) {
@@ -44,13 +44,11 @@ if ((currMicros - lastMicros) > usNote[currNote + currOffset]) {
 }
 ```
 
-**How it works:** The output alternates between 0V and 5V. The time spent at each level determines the frequency. Longer half-period = lower frequency. The `usNote[]` table contains values like `4545.454590` (microseconds) for A4 (440Hz).
+The half-period sets the pitch: `usNote[]` has entries like `4545.454590`. A2 is shifted right by 3 to get 0-127, an index straight into the table, and the A0 knob adds an offset to transpose.
 
-**The pitch CV trick:** The raw `analogRead(2)` value is right-shifted by 3 to give 0-127 — an index directly into the 128-note table. The knob (A0) adds an offset for transposition.
+It can only make a square wave, since the output is either 0 or 255. The pitch also depends on how quickly `loop()` comes round to check the time, so anything that slows the loop down shows up as jitter.
 
-**Limitation:** The square wave is the ONLY waveform this approach can produce. You can't do arbitrary waveshapes because the output is just a binary toggle. Also, pitch stability depends entirely on loop speed — any variation in how long `loop()` takes creates jitter.
-
-**Speed hack:** The ADC prescaler is reduced from the default 128 to 16, making `analogRead()` about 8x faster (~13μs instead of ~100μs). This is critical for keeping the loop tight enough to generate audio frequencies:
+To keep the loop fast, it drops the ADC prescaler from 128 to 16, which takes `analogRead()` from about 100μs to about 13μs:
 
 ```cpp
 sbi(ADCSRA, ADPS2);
@@ -58,13 +56,13 @@ cbi(ADCSRA, ADPS1);
 cbi(ADCSRA, ADPS0);
 ```
 
-**Found in:** `official/AC24_SimpleVCO`
+**In:** `official/AC24_SimpleVCO`
 
 ---
 
-### 1.2 Software Ramp Sawtooth (SIMPLEST_SAWTOOTH)
+### 1.2 Counting saw (SIMPLEST_SAWTOOTH)
 
-A `for` loop from 0 to 100 outputs incrementing DAC values. When it reaches the top, it wraps back to 0 — creating a sawtooth wave:
+A `for` loop counts 0 to 100 into the DAC, over and over. A ramp that resets is a sawtooth:
 
 ```cpp
 for (n = 0; n <= 100; n++) {
@@ -72,34 +70,32 @@ for (n = 0; n <= 100; n++) {
 }
 ```
 
-Frequency is controlled by adding `delayMicroseconds()` inside the loop. Shorter delay = higher pitch.
+It runs flat out. There's a `delayMicroseconds(analogRead(2))` inside the loop for pitch control, commented out, so as it stands the pitch is fixed by how long each pass takes.
 
-**Why this works:** A sawtooth wave IS just a linear ramp that resets. By outputting incrementing values to the DAC, you get a voltage that rises linearly and then drops back — exactly a sawtooth. The only issue is the frequency depends on loop timing, which is crude.
-
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/` (the "simplest" sketches)
+**In:** `snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH`
 
 ---
 
-### 1.3 Software Triangle (ARDCORE_TRIANGLE)
+### 1.3 Counting triangle (ARDCORE_TRIANGLE)
 
-Two sequential `for` loops — one ramping up, one ramping down — with `delayMicroseconds()` per step for frequency control:
+Two loops, one up and one down, with a `delayMicroseconds()` after each step. A2 sets the delay, and so the pitch:
 
 ```cpp
-for (n = 0; n <= 100; n++) { dacOutput(n); delayMicroseconds(d); }
-for (n = 100; n >= 0; n--) { dacOutput(n); delayMicroseconds(d); }
+val = map(analogRead(2), 0, 1023, 145, 5);
+for (int n = 0; n < 128; ++n) { dacOutput(n * 2); delayMicroseconds(val); }
+int value = 255;
+for (int n = 128; n < 256; ++n) { dacOutput(value); value -= 2; delayMicroseconds(val); }
 ```
 
-The same principle as the sawtooth, but the descending ramp creates the second half of the triangle. The AC19_ShapedLFO extends this to a float-precision accumulator with separate up/down rates for asymmetric waveshaping (see LFO section).
+AC19_ShapedLFO does the same thing with a float and separate rates for the two halves, so it can skew the shape (7.1).
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/ARDCORE_TRIANGLE`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_TRIANGLE`
 
 ---
 
-### 1.4 Phase Accumulator + Wavetable Lookup (AC33_SSQScreecherWT)
+### 1.4 Phase accumulator and wavetables (AC33_SSQScreecherWT)
 
-The most architecturally sophisticated oscillator in the repo — ported from the yorkmodular/tinydvco. The core idea:
-
-A **16-bit phase accumulator** (`syncPhaseAcc`) is incremented by a **phase increment** (`syncPhaseInc`) every time the Timer2 ISR fires (at 66.67kHz). The top 8 bits of the accumulator index into a 256-byte wavetable stored in PROGMEM:
+Ported from yorkmodular's tinydvco (see tinydvco_to_ardcore_port.md). A Timer2 interrupt fires at 66.67kHz. Each time, it adds a phase increment to a 16-bit phase accumulator and uses the top 8 bits to pick one of 256 samples from a table in flash:
 
 ```cpp
 ISR(TIMER2_COMPA_vect)
@@ -118,45 +114,39 @@ ISR(TIMER2_COMPA_vect)
 }
 ```
 
-**Why this is better than the loop-based approaches:**
+Compared with the loop-based oscillators above:
 
-1. **Pitch stability** — the ISR fires at a fixed rate regardless of what `loop()` is doing. No jitter from `analogRead()` delays.
-2. **Arbitrary waveforms** — any shape you can store as 256 bytes works. Sine, triangle, weird organic textures, anything.
-3. **Pitch is controlled by math, not timing** — changing the phase increment changes how fast you scan through the wavetable, not how fast the code runs.
+1. The pitch is steady. The interrupt fires at a fixed rate whatever `loop()` is doing, so `analogRead()` doesn't make it wobble.
+2. Any waveform you can put in 256 bytes will play.
+3. The pitch comes from the size of the increment, not from how fast the code runs.
 
-**The phase accumulator explained:**
+The accumulator is a position within one cycle of the wave. A small increment moves through the table slowly and gives a low note, a big one skips through and gives a high note. When the 16 bits overflow, it wraps back to the start and the cycle repeats. The bottom 8 bits are a fraction between samples, and they're ignored: there's no interpolation.
 
-Think of it as a needle on a record. The wavetable is one groove (one cycle of the waveform, 256 samples). The accumulator is a 16-bit counter that represents where the needle is. Every ISR call, you advance the needle by `syncPhaseInc`. The top 8 bits tell you which of the 256 samples to read. The bottom 8 bits are a "fractional" position that gets thrown away (no interpolation).
+**Pitch table:** a 1024-entry table in flash, `freqTable`, turns the 10-bit pitch reading straight into an increment. The table is exponential, for 1V/oct, so the chip never has to call `exp()` or `pow()`, which are far too slow.
 
-- Small increment → needle moves slowly → low frequency
-- Large increment → needle jumps through → high frequency
-- The 16-bit accumulator wraps around at 0xFFFF automatically → the waveform repeats cleanly
-
-**The frequency table:** A 1024-entry PROGMEM lookup table (`freqTable`) maps the 10-bit ADC reading directly to a phase increment. The table is pre-calculated for 1V/octave response — the exponential relationship is baked into the table values because `exp()` and `pow()` are far too slow for real-time on an 8-bit chip.
-
-**Algorithmic waveforms:** Sawtooth and square don't need lookup tables:
+**Saw and square** don't need tables:
 
 ```cpp
 case WT_SAW:
-    val = step;                           // the phase position IS the saw
+    val = step;                           // the position is the saw
     break;
 case WT_SQUARE:
-    val = (step < 128) ? 0x00 : 0xFF;    // binary threshold
+    val = (step < 128) ? 0x00 : 0xFF;
     break;
 ```
 
-This saves 512 bytes of flash.
+That saves 512 bytes of flash.
 
-**Phase modulation:** Adding a CV-controlled offset to the table index before lookup:
+**Phase modulation:** A3 adds an offset to the table index before the lookup:
 
 ```cpp
 uint8_t idx = step + phaseOffset;  // phaseOffset from analogRead(3)
 val = pgm_read_byte_near(tbl + idx);
 ```
 
-This is phase modulation (PM), which sounds similar to FM synthesis. Since the table index wraps naturally at 8 bits, no bounds checking is needed.
+The index is 8 bits, so it wraps by itself and there's nothing to bounds-check.
 
-**Hard sync:** The clock input resets the phase accumulator to zero inside the ISR:
+**Hard sync:** the clock input sets a flag, and the interrupt resets the accumulator:
 
 ```cpp
 if (clkState) {
@@ -165,36 +155,36 @@ if (clkState) {
 }
 ```
 
-When the sync clock frequency differs from the oscillator frequency, the abrupt phase reset creates complex, harmonically rich timbres — a classic analogue synthesis technique.
+Feed CLK a different frequency from the oscillator's and the resets cut each cycle short, which is the classic sync sound.
 
-**Waveform selection smoothing:** The last 4 knob readings are averaged to avoid jittery switching from a noisy pot. The buffer length is a power of 2 so division can be a bit-shift:
+**Waveform knob smoothing:** the last four readings of A0 are averaged before picking a waveform, so a noisy pot doesn't flick between two. Four is a power of two, so the divide is a shift:
 
 ```cpp
 waveBuff[waveBuffStep++] = waveIdx;
 if (waveBuffStep >= WAVE_BUFF_LEN) {
     uint16_t acc = 0;
     for (int i = 0; i < WAVE_BUFF_LEN; i++) acc += waveBuff[i];
-    currentWave = (acc >> WAVE_BUFF_SHIFT);  // >> 2 = divide by 4
+    currentWave = (acc >> WAVE_BUFF_SHIFT);  // >> 2, divide by 4
     waveBuffStep = 0;
 }
 ```
 
-**Memory budget:** Each wavetable is 256 bytes. With ~25KB free flash after the frequency table and code, you can fit ~97 additional wavetables. The tinydvco on the ATtiny85 was limited to ~5 waveforms due to its 8KB flash — the ArdCore removes this constraint.
+**Room:** each table is 256 bytes. AC33 has five, plus the computed saw and square. With about 25KB of flash free after the pitch table and the code, there's room for close to a hundred more. The ATtiny85 that tinydvco was written for has 8KB in total.
 
-**Found in:** `community/user_submitted/AC33_SSQScreecherWT`
+**In:** `community/user_submitted/AC33_SSQScreecherWT`
 
 ---
 
-### 1.5 Granular Synthesis via Dual Phase Accumulators (Auduino Port)
+### 1.5 Granular synthesis (Auduino)
 
-A port of Peter Knight's Auduino — a lo-fi granular synthesiser. The concept: two independent "grain" oscillators run inside a Timer2 overflow ISR at 31.25kHz. A master oscillator controls the grain rate.
+Peter Knight's Auduino, adapted by Dan Snazelle. A Timer2 overflow interrupt runs at about 31kHz. A master oscillator sets the grain rate, and each time it wraps, two grain oscillators restart:
 
 ```cpp
 SIGNAL(PWM_INTERRUPT)
 {
   syncPhaseAcc += syncPhaseInc;
   if (syncPhaseAcc < syncPhaseInc) {
-    // Sync oscillator overflowed — start new grain
+    // Sync oscillator overflowed, start new grain
     grainPhaseAcc = 0;
     grainAmp = 0x7fff;
     grain2PhaseAcc = 0;
@@ -225,38 +215,38 @@ SIGNAL(PWM_INTERRUPT)
 }
 ```
 
-**How the grains work:**
+1. When the master accumulator overflows (the new value is smaller than the increment), both grains start again from zero at full level.
+2. Each grain is a triangle made from a ramp. When the top bit of the accumulator is set, the value is flipped with `~`, so the second half of the ramp runs back down.
+3. Each grain fades out: every sample it loses a fraction of its current level, `(grainAmp >> 8) * grainDecay`, which is an exponential decay in fixed point.
+4. The two grains are added together.
 
-1. The master oscillator (`syncPhaseAcc`) sets the "grain period." When it overflows, both grain oscillators reset to zero — starting a new grain.
-2. Each grain oscillator generates a **triangle wave** by testing the MSB of its phase accumulator. If the top bit is 0, the value rises linearly; if it's 1, the value is inverted (falls linearly). The `~value` bit-flip is the cheapest possible way to make a triangle from a ramp.
-3. Each grain's amplitude decays exponentially: `grainAmp -= (grainAmp >> 8) * grainDecay`. The right-shift by 8 extracts the "integer part" of the amplitude, multiplied by the decay rate. This is a fixed-point exponential decay — the amplitude drops fast at first, then tails off.
-4. The two grains are summed together for the final output.
+The code has three ways to turn the pitch knob into a rate: a smooth exponential curve (`antilogTable[]`, 64 entries), chromatic steps (`midiTable[]`, 128 entries) and a pentatonic scale (`pentatonicTable[]`, 54 entries). v5 uses the pentatonic one. The smooth version gets a whole exponential curve out of 64 values: `antilogTable[input & 0x3f] >> (input >> 6)`. The bottom 6 bits pick the entry and the top bits say how many octaves to shift it down.
 
-**Three pitch mapping modes** are included:
-
-- **Smooth logarithmic** (`antilogTable[]`) — 64-entry lookup, continuous sweep
-- **Stepped chromatic** (`midiTable[]`) — 128-entry table, snaps to semitones
-- **Stepped pentatonic** (`pentatonicTable[]`) — 54-entry table, pentatonic scale only
-
-The logarithmic table uses a clever encoding: `antilogTable[input & 0x3f] >> (input >> 6)`. The bottom 6 bits index the 64-entry table, and the top bits determine how many times to right-shift the result (halving the frequency per "octave"). This gives a smooth exponential curve from just 64 stored values.
-
-**Found in:** `snazzy_fx/ARDCORE_auduino_v5`
+**In:** `snazzy_fx/ARDCORE_auduino_v5`
 
 ---
 
-### 1.6 Two-Tone Drone with Chorus (ARDCORE_twotone_mod)
+### 1.6 Two-tone drone (ARDCORE_twotone_mod)
 
-Two software oscillators with cross-fade controlled by LFOs. A 512-byte `DELAY_BUFF` provides chorus. Multiple LFOs (lfo1-lfo4) modulate cross-fade, chorus speed, chorus depth, and ring-mod envelope simultaneously. Scale tables provide pitched output.
+A port of yerpa58's drone. Two wavetable oscillators crossfade under LFO control, a 512-byte buffer adds chorus, and four LFOs move the crossfade, the chorus speed and depth, and a ring-mod envelope. The original doesn't fit in the chip's RAM, and it plays only a quarter of each table. `ARDCORE_twotone_mod_fixed` moves the tables to flash and fixes the indexes and the mixing maths; its header lists all four problems.
 
-**Found in:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod`
+**In:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod`, `snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod_fixed`
 
 ---
 
-## 2. Noise Generation
+### 1.7 FM (fac_fm_osc)
 
-### 2.1 Linear Feedback Shift Register (LFSR) — 16-bit
+By Alfonso Alba. Two sine oscillators, one modulating the other's frequency. A0 and A2 set the pitch (A2 is 1V/oct), A1 offsets the modulator's pitch, A3 sets the modulation depth, and CLK hard-syncs the carrier. `fac_fm_osc_fixed` builds with current tools and gives DAC bit 6 back: the original also drove pin 11 from Timer2, and pin 11 is that bit.
 
-The classic digital noise generator. A 16-bit register is shifted right by one position each step. The new bit fed in is computed by XOR-ing specific tap positions:
+**In:** `snazzy_fx/fac_fm_osc`, `snazzy_fx/fac_fm_osc_fixed`
+
+---
+
+## 2. Noise
+
+### 2.1 16-bit LFSR
+
+A 16-bit register shifts right one place per step, and the bit fed in at the top is the XOR of four tap bits:
 
 ```cpp
 uint16_t lfsr = 0xACE1u;
@@ -273,37 +263,35 @@ void loop() {
 }
 ```
 
-**Why this sounds like noise:** The feedback polynomial is chosen to give a **maximal-length sequence** — the register cycles through all 65,535 possible non-zero states before repeating. The pattern is deterministic but so long that it sounds random. The output bits have statistical properties close to true white noise.
+With these taps (16, 14, 13, 11) the register goes through all 65,535 non-zero values before it repeats. That makes it a maximal-length sequence, and it sounds like white noise. Most tap choices give shorter cycles; these come from the standard tables. The DAC gets the low 8 bits.
 
-**The taps:** Positions 16, 14, 13, 11 (or equivalently, right-shifted positions 0, 2, 3, 5 since we're working from the LSB). These tap positions define a **primitive polynomial** over GF(2) — a polynomial that generates the maximum possible sequence length. Not all tap combinations work; these are specifically chosen from mathematical tables.
+The `do ... while` stops when the register gets back to its starting value, then `loop()` runs it again.
 
-**The do-while loop:** The `while (lfsr != 0xACE1u)` check detects when the register has cycled back to its starting state. In practice, at audio rates the sequence is so long (65,535 steps) that it never audibly repeats.
-
-**Found in:** `snazzy_fx/LFSR/LFSR`
+**In:** `snazzy_fx/LFSR/LFSR`
 
 ---
 
-### 2.2 LFSR — 32-bit Galois Form
+### 2.2 32-bit LFSR, Galois form
 
-A more compact LFSR implementation using the Galois (rather than Fibonacci) form:
+The same idea in one line:
 
 ```cpp
 lfsr = (lfsr >> 1) ^ (-(lfsr & 1u) & 0xD0000001u);
 ```
 
-**How this works:** The Galois form applies all the feedback taps in a single operation. `-(lfsr & 1u)` is either `0x00000000` (if the LSB is 0) or `0xFFFFFFFF` (if 1). AND-ing with `0xD0000001u` selects the tap polynomial. The XOR applies it. The taps correspond to x^32 + x^31 + x^29 + x + 1.
+`-(lfsr & 1u)` is all zeros if the bottom bit is 0 and all ones if it's 1. ANDing that with `0xD0000001u` gives either nothing or the tap pattern, and the XOR applies it. The polynomial is x^32 + x^31 + x^29 + x + 1.
 
-The 32-bit version produces 4,294,967,295 unique states — at audio sample rates, it takes over a minute to cycle, making the repetition completely inaudible.
+It runs for 4,294,967,295 steps before repeating, which at audio rates is far longer than you'll ever listen.
 
-The SDIY variant runs from a Timer2 overflow ISR for consistent sample rate, and feeds both Pin 11 PWM and the R-2R DAC simultaneously.
+`SDIY_ARDCORE_NOISE` steps a 32-bit register from a Timer2 overflow interrupt at about 31kHz, and writes each value both to the DAC and to pin 11 as PWM. Pin 11 is also DAC bit 6, so that bit carries the PWM rather than the noise.
 
-**Found in:** `snazzy_fx/LFSR/LFSR32`, `snazzy_fx/SDIY_ARDCORE_NOISE`
+**In:** `snazzy_fx/LFSR/LFSR32`, `snazzy_fx/WHITE_NOISE/SDIY_ARDCORE_NOISE`
 
 ---
 
-### 2.3 XOR-Shift PRNG with Buffer (Dead City Radio)
+### 2.3 Buffered noise (Dead City Radio)
 
-Uses a floating-point XOR-shift pseudo-random number generator to fill a 128-sample buffer:
+By Ascetic. `loop()` fills a 128-sample buffer from a floating-point shift-and-add generator:
 
 ```cpp
 g_x1 ^= g_x2;
@@ -311,17 +299,17 @@ g_x1 ^= g_x2;
 g_x2 += g_x1;
 ```
 
-A Timer1 CTC interrupt outputs samples from the buffer at a rate set by `OCR1A` (pitch-controllable). The loop refills the buffer asynchronously when the ISR sets a `buffFlag`. This is a **double-buffering** pattern — the ISR reads while `loop()` writes.
+A Timer1 interrupt plays the buffer out at a rate set by `OCR1A`, which is how the pitch is controlled. When it reaches the end it sets `buffFlag`, and `loop()` refills the buffer.
 
-**Smoothing modes:** 1-sample, 2-sample, and 3-sample neighbour averaging are selectable via CV. More averaging = smoother noise = lower frequency content.
+A3 is meant to smooth it by averaging neighbouring samples. In the original, the averaging picks samples from the wrong end of the buffer (and one index is never set), so the noise gets quieter rather than darker, and a `==` where `=` was meant keeps the buffer refilling nonstop. The `_fixed` copies of all three versions average each sample with the ones just before it, which is a real low-pass.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/DeadCityRadio_AudioRate`
+**In:** `community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_AudioRate`
 
 ---
 
-### 2.4 ADC Multiplication as Noise (ARDCORE_NOISEMAKER)
+### 2.4 Multiply and wrap (ARDCORE_NOISEMAKER)
 
-Perhaps the simplest "noise" generator possible — three lines of functional code:
+Dan Snazelle's "as simple as it gets":
 
 ```cpp
 void loop() {
@@ -329,19 +317,17 @@ void loop() {
 }
 ```
 
-**Why this makes noise:** Multiplying two 10-bit readings gives a 20-bit result, which is then truncated to 8 bits by `dacOutput(long v)` casting to `int`. The truncation creates **aliasing** — the high bits of the product wrap around unpredictably. When one input is an LFO, the output becomes amplitude-modulated noise. When both inputs are audio-rate, you get a crude ring modulator.
+Two 10-bit readings multiplied give up to 20 bits. The DAC routine keeps only the low 8, so the product wraps round many times across its range. A still input gives a fixed level; a moving one (an LFO into A2) folds into a buzz, brighter the further A0 is turned up.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/ARDCORE_NOISEMAKER`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_NOISEMAKER`
 
 ---
 
-## 3. Bytebeat / Algorithmic Audio
+## 3. Bytebeat
 
-Bytebeat is a family of techniques discovered by viznut (Ville-Matias Heikkilä) where a single arithmetic/bitwise expression on a counter `t` generates complex audio patterns. No wavetables, no buffers, no state machines — just math.
+Bytebeat comes from viznut (Ville-Matias Heikkilä) in 2011: a counter `t` goes up by one per sample, and a single expression of shifts, ANDs and ORs on `t` gives the output. No tables, no buffers.
 
-### 3.1 The Basic Bytebeat Pattern
-
-An integer `t` increments each loop iteration. A compound expression on `t` produces the audio sample:
+### 3.1 The basic loop
 
 ```cpp
 void loop() {
@@ -353,22 +339,22 @@ void loop() {
 }
 ```
 
-The `for(;;)` infinite loop means this sketch never returns from `loop()` — it runs forever at maximum speed. The `&` (bitwise AND) between a scaled counter and a shifted counter creates a self-similar pattern that sounds musical despite being purely algorithmic.
+The `for` never ends, so `loop()` never returns and the counter runs as fast as the chip will go. `pretty1` adds scaled copies of the result together before sending it out.
 
-**Found in:** `snazzy_fx/BYTEBEAT.../pretty1`
+**In:** `snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1`
 
-### 3.2 More Complex Formulas
+### 3.2 Layers and speed control
 
-The repo contains dozens of bytebeat formulas. Some highlights:
+Several terms ORed together make patterns at different speeds:
 
-**Drums and melody** — multiple bitwise terms OR'd together create layered rhythmic and melodic patterns:
 ```cpp
 myval = (t*9 & t>>4 | t*5 & t>>7 | t*38 & t>>10) - 1;
 ```
 
-The different shift amounts (`>>4`, `>>7`, `>>10`) create patterns at different time scales. The small shifts (`>>4`) create fast rhythmic elements (like hi-hats), while large shifts (`>>10`) create slow melodic movement. The OR combines them. The `-1` offsets the DC level.
+The shift sets the time scale: `t>>4` changes quickly and gives the fast, hi-hat-like parts, and `t>>10` changes slowly and gives the melody. The OR puts them together.
 
-**Speed control via CV:**
+A delay between steps makes the speed voltage-controlled:
+
 ```cpp
 for (t = 0; ; t++) {
     delayMicroseconds(1 + analogRead(2));
@@ -377,17 +363,17 @@ for (t = 0; ; t++) {
 }
 ```
 
-The `delayMicroseconds(1 + analogRead(2))` between increments controls playback speed. At minimum CV, `t` advances at near-maximum rate (audio). At maximum CV, `t` crawls (slow CV pattern). The `+1` prevents a delay of zero.
+With A2 at 0V it runs at audio rate; turned up, it slows until it's a stepped CV pattern. The `+ 1` avoids a zero delay.
 
-**Found in:** `snazzy_fx/BYTEBEAT.../drumsandmelody`, `snazzy_fx/BYTEBEAT.../sloe_dub`, `snazzy_fx/BYTEBEAT.../fucking_techno`
+**In:** `snazzy_fx/BYTEBEAT_CV_and_AUDIO/drumsandmelody`, `sloe_dub`, `fucking_techno` and the rest of that folder.
 
 ---
 
-## 4. Cellular Automata Synthesis
+## 4. Cellular automata and counters
 
-### 4.1 1D Wolfram Elementary Cellular Automata (CELLULAR_AUTOMATA_SYNTH)
+### 4.1 Wolfram cellular automaton (CELLULAR_AUTOMATA_SYNTH)
 
-A 34-cell one-dimensional binary cellular automaton evolves according to a user-specified rule byte (0-255 via the A2 knob). Each cell's next state depends on its 3-cell neighbourhood:
+Eric Boger's CA synth, ported by Dan Snazelle. A row of 34 cells, each on or off, evolves by a rule number from 0 to 255 (set by A2). Each cell's next state depends on itself and its two neighbours:
 
 ```cpp
 state = 0;
@@ -404,7 +390,7 @@ if (BIT_TEST(rule, state)) {
 }
 ```
 
-**How it makes sound:** The automaton doesn't directly generate audio samples. Instead, it accumulates a `CA_tonerate` value from the cell states. This rate controls how fast a simple square-wave oscillator toggles:
+The cells don't become samples directly. As the row is worked out, living cells build up `CA_tonerate`, and that sets how often a square wave flips:
 
 ```cpp
 CA_tonecnt--;
@@ -414,19 +400,17 @@ if (CA_tonecnt == 0) {
 }
 ```
 
-Higher `CA_tonerate` = slower toggle = lower pitch. The automaton's evolution over time creates shifting tonal patterns. Different rule numbers produce radically different sounds — rule 30 (chaotic) sounds very different from rule 110 (complex but structured).
+A bigger rate means a longer wait between flips and a lower note. Every so often it runs the automaton again and the pitch jumps. A0 sets how often, A1 how many generations each time, A2 the rule and A3 which cells count. Rule 30 and rule 110 sound nothing alike.
 
-**CV control:** The clock speed (A0), number of iterations per step (A1), rule number (A2), and active cell range (A3) are all knob/CV controllable. This creates a 4-dimensional parameter space of sonic textures.
+The row is stored twice, `[0]` and `[1]`, and the two swap roles each generation. That way the new row is written to one copy while the old one is still there to read.
 
-**The double-buffer trick:** Two copies of the cell array (`[0]` and `[1]`) alternate roles as "old" and "new" state, swapped with a boolean flag each iteration. This prevents the current step's evolution from corrupting the state that neighbouring cells need to read.
-
-**Found in:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/CELLULAR_AUTOMATA_SYNTH`
+**In:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/CELLULAR_AUTOMATA_SYNTH`
 
 ---
 
-### 4.2 Fractal / Counter-Based Synthesis (fraktal_synth)
+### 4.2 Counter arithmetic (fraktal_synth)
 
-Two algorithms operate on a 16-bit integer counter `FS_cnt`. Each algorithm extracts the high and low bytes, masks and multiplies them against CV-controlled parameters:
+Also Eric Boger's, ported by Dan Snazelle. A 16-bit counter goes up by one each pass. Its two bytes are masked and multiplied by knob values:
 
 ```cpp
 FS_cnthi = make8(FS_cnt, 1) & param1;  // high byte, masked
@@ -435,31 +419,29 @@ FS_out = FS_cnthi * FS_cntlo;           // multiply
 FS_out = FS_out * param2;               // scale
 
 if (param3 != 255) {
-    if (FS_out & param3) FS_out = 255;  // threshold to binary
+    if (FS_out & param3) FS_out = 255;  // threshold to on/off
     else                 FS_out = 0;
 }
 
 FS_cnt++;  // advance counter
 ```
 
-The `make8(val, offset)` macro extracts byte N from a multi-byte value: `((val >> (offset * 8)) & 0xff)`.
+`make8(val, n)` picks byte n out of a value: `((val >> (n * 8)) & 0xff)`.
 
-**Why this sounds musical:** The counter increments linearly, but the combination of byte extraction, masking, and multiplication creates non-linear patterns. The threshold step (comparing against `param3`) reduces the output to a binary waveform whose pattern changes with the counter — creating rhythmic and tonal structures from pure arithmetic. It's related to bytebeat but operates at the nibble/byte level rather than on the full counter.
+The counter moves in a straight line, but the masking and multiplying scramble it into repeating patterns, and the threshold turns those into an on/off wave. It's close to bytebeat, working on whole bytes of the counter. The clock input switches between two versions of the algorithm. It reads the knobs on every pass, so it only makes about 2,000 samples a second, and it sounds gritty and rhythmic rather than tonal.
 
-**The clock input switches between the two algorithms** — one uses only the high byte of `FS_cnt`, the other masks both bytes. This gives two "timbres" that can be switched rhythmically by an external clock.
-
-**Found in:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/fraktal_synth`
+**In:** `snazzy_fx/FRAKTAL_SYNTH_PORTS/fraktal_synth`
 
 ---
 
-## 5. Delay Lines and Reverb
+## 5. Delay and echo
 
-### 5.1 Circular Buffer Delay with Feedback
+### 5.1 Ring buffer delay
 
-The core delay architecture used across all delay sketches in the repo:
+Dan Snazelle's delays all work like this. One buffer, a write pointer that goes round it, and a read pointer some distance away:
 
 ```cpp
-const short arraySize = 900;  // max for ATmega328 SRAM (~950 usable)
+const short arraySize = 900;
 unsigned short delArr[arraySize];
 unsigned short pointer = 0, delPointer;
 
@@ -480,38 +462,38 @@ void loop() {
 }
 ```
 
-**The circular buffer:** `pointer` is the write position. `delPointer` reads from `delayLength` samples ahead (which, because the buffer wraps, is the same as `delayLength` samples in the past). The modulo operator wraps both pointers within the buffer bounds.
+The read pointer is `delayLength` ahead of the write pointer. In a ring buffer, that means `arraySize - delayLength` behind it, so the delay knob works backwards: turning it up makes the delay shorter. The `_fixed` copies of BLOG_DELAY_BEST and Long_DELAY_BEST read `delayLength` behind instead (`pointer + arraySize - delayLength`), so the knob goes the right way.
 
-**Feedback:** The delayed sample is multiplied by a feedback coefficient (0.0 to ~0.6) and added to the current input before being written back into the buffer. This creates repeating echoes. The feedback coefficient is limited (divided by 1600 instead of 1024) to prevent runaway feedback that would clip.
+**Feedback:** the delayed sample is scaled and added to the input before it's written back, so each echo goes round again. A3 is divided by 1600 rather than 1024, which caps the feedback at about 0.64.
 
-**The SRAM wall:** At 2 bytes per sample (`unsigned short`), the maximum buffer is ~950 samples. At whatever sample rate the loop achieves (roughly 8-10kHz with analogReads), this gives roughly 100ms of maximum delay. Short, but usable for slapback echo and comb-filter effects.
+**Memory:** 900 samples at 2 bytes each is 1,800 bytes, most of the 2KB. One sample per pass through `loop()`, with the ADC sped up to prescaler 32, comes to about a tenth of a second at most. That's enough for slapback and comb-filter sounds.
 
-**The `>> 2` output scaling:** Right-shifting by 2 (dividing by 4) prevents clipping when the delayed signal and dry signal are summed. Without this, the output would regularly exceed 255 and wrap around, causing harsh distortion.
+**Output:** dry plus delayed is shifted right by 2 so it doesn't overflow the DAC.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST` and the other sketches in that folder.
 
 ---
 
-### 5.2 Randomised Feedback (BLOG_DELAY_BEST variant)
+### 5.2 All-or-nothing feedback (BLOG_DELAY_BEST)
 
-A single line transforms a clean delay into a chaotic texture:
+One line, commented "VERY COOL EFFECT!!", makes this sketch what it is:
 
 ```cpp
 feedback = ((feedback) && (random(500)));
 ```
 
-**What this does:** The `&&` (logical AND) evaluates `feedback` as a boolean (non-zero = true), then evaluates `random(500)` as a boolean (also almost always true, but returns 0 about 1 in 500 times). When `random(500)` returns 0, the entire expression is 0 (false), which gets assigned to `feedback` — effectively zeroing the feedback for that sample. This creates intermittent dropout of the echo, producing chaotic, stuttering effects.
+`&&` returns true or false, so `feedback` becomes 1 or 0. With A3 anywhere above zero, feedback is 1: full feedback. `random(500)` returns 0 about once in 500 samples, and then feedback is 0 for that sample. With full feedback the echoes never fade, they build up until the numbers wrap, and the random dropouts break them up. The result is a glitchy, stuttering loop rather than a clean echo. The fixed copy keeps this on purpose.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST`
 
 ---
 
-### 5.3 Dual-Tap Comb Reverb (reverb_prttygood)
+### 5.3 Two echoes (reverb_prttygood)
 
-Two read positions at fixed offsets from the write pointer create a Schroeder-style comb filter reverb:
+Called a reverb. It keeps the input in an 1,800-byte buffer and adds two earlier samples to it, 900 and 1,799 samples back, at a quarter and an eighth of the level:
 
 ```cpp
-char signal[1800];  // 1800-byte buffer (signed char!)
+char signal[1800];  // signed
 
 echo1 = pos - 900;
 echo2 = pos - 1799;
@@ -521,11 +503,11 @@ if (echo2 < 0) echo2 = 1800 + pos - 1799;
 S1out = S1out + (signal[echo1] >> 2) + (signal[echo2] >> 3);
 ```
 
-**How it works:** Two delayed copies of the input are summed with the current sample at different gain levels (`>> 2` = quarter volume, `>> 3` = eighth volume). The two taps at different delay lengths create interference patterns that simulate the multiple reflections of a reverberant space.
+That's about 45ms and 90ms. There's no feedback, so it's two fixed echoes rather than a tail.
 
-**The signed char trick:** Using `char` instead of `unsigned char` means samples are stored as -128 to +127, which allows the summation to create both constructive and destructive interference. With unsigned values, you'd only get constructive summing and the output would constantly clip.
+The buffer is `char`, signed, so samples run from -128 to 127 around a centre of zero. Echoes can then cancel as well as add. With unsigned samples they would only ever add, and the sum would pile up at the top.
 
-**The slow ADC trick:** The ADC prescaler is set to /64 (slower than the usual /16 speed hack):
+It slows the ADC down on purpose, to prescaler 64:
 
 ```cpp
 sbi(ADCSRA, ADPS2);
@@ -533,17 +515,19 @@ sbi(ADCSRA, ADPS1);
 cbi(ADCSRA, ADPS0);
 ```
 
-This deliberately slows down `analogRead()`, which reduces the effective sample rate, which makes the 1800-sample buffer represent a longer time span — giving a longer reverb tail. A clever hack: instead of making the buffer bigger (impossible due to SRAM limits), make time slower.
+A slower read means fewer samples a second, so the same 1,800 bytes cover more time. The buffer can't grow, so time is stretched instead.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/DELAY_SKETCHES/reverb_prttygood`
+The input line has a typo: `analogRead(3)>>2-CENTERPOS`. C does the subtraction first, so that's a shift by -126, which does nothing here, and the 10-bit reading is cut to its low 8 bits. The input wraps round four times across its range. `reverb_prttygood_fixed` corrects it and moves the output back to the middle of the DAC.
+
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood`, `reverb_prttygood_fixed`
 
 ---
 
-## 6. Waveshaping and Distortion
+## 6. Waveshaping and distortion
 
-### 6.1 Nibble-Swap Distortion (DISTORTION)
+### 6.1 Nibble swap (DISTORTION)
 
-The high and low 4-bit nibbles of the input sample are extracted, swapped, and recombined:
+By Dan Snazelle. The top and bottom 4 bits of each sample swap places:
 
 ```cpp
 #define CENTERPOS 128
@@ -551,26 +535,26 @@ The high and low 4-bit nibbles of the input sample are extracted, swapped, and r
 void distortion(void) {
     unsigned int temp1, temp2;
     if ((S1out > 10) || (S1out < -10)) {
-        temp1 = (((int)S1out + CENTERPOS) >> 4) & 0xf;  // extract high nibble
-        temp2 = (((int)S1out + CENTERPOS) & 0xF) << 4;  // extract low nibble, shift up
+        temp1 = (((int)S1out + CENTERPOS) >> 4) & 0xf;  // high nibble, moved down
+        temp2 = (((int)S1out + CENTERPOS) & 0xF) << 4;  // low nibble, moved up
         S1out = ((((temp1 + temp2) & 0x7F) - CENTERPOS)) >> 2;
     }
 }
 ```
 
-**Why this sounds interesting:** The nibble swap creates a **non-monotonic transfer function**. Normally, as input increases from 0 to 255, output also increases smoothly. After nibble-swapping, the mapping becomes discontinuous — small input changes can cause large output jumps, and vice versa. This produces a complex harmonic distortion that sounds like a bitcrusher crossed with a foldback distortion.
+Normally a bigger input gives a bigger output. After the swap, a small change in the input can make a big jump in the output, so the wave gets chopped into a harsh digital scramble, somewhere between a bitcrusher and a wavefolder. Quiet signals (within 10 of the centre) pass through untouched.
 
-The `CENTERPOS` (128) offset centers the signal around zero before processing, then re-centers it after. The `& 0x7F` masks to 7 bits, and the `>> 2` scales down to prevent clipping.
+Adding `CENTERPOS` moves the signed sample to 0-255 for the swap, and subtracting it moves it back. `& 0x7F` keeps 7 bits and `>> 2` brings the level down.
 
-The `delayMicroseconds(map(analogRead(0), 0, 1023, 22000, 1))` after the output controls effective sample rate — at low values you get audio-rate processing, at high values you get a sample-and-hold effect layered on top of the distortion.
+A `delayMicroseconds(map(analogRead(0), 0, 1023, 22000, 1))` after each sample also lowers the sample rate: fully left holds each sample for 22ms, fully right runs at full speed. A3 does the same up to 32ms.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/DISTORTION`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/DISTORTION`
 
 ---
 
-### 6.2 XOR Bit-Shift Waveshaping (waveshpr2)
+### 6.2 XOR of shifted copies (waveshpr2)
 
-An array of 11 bit-shifted versions of the input is created, then two are XOR'd together:
+By Dan Snazelle. It makes shifted copies of the input and XORs two of them:
 
 ```cpp
 int xorvalue[10];
@@ -589,15 +573,15 @@ xorvalue[10] = S1out;
 newOut = xorvalue[x] ^ xorvalue[v];
 ```
 
-**How it works:** Each shifted version of the input emphasises different bits. XOR-ing two of these creates a transfer function that depends on which bits are set in the input — effectively a bit-level waveshaper whose character changes depending on the pair of shifts selected. Different `x` and `v` indices produce different distortion characters.
+Each shift lines different bits of the sample up against each other, so each pair gives a different kind of bit-level distortion. In the original, `x` and `v` are reset at the start of every call, so it always XORs the same pair (copies 2 and 1), and the array is declared with 10 entries but filled with 11. `waveshpr2_fixed` sizes the array properly and lets A1 and A2 pick the two copies, as the sketch's header describes.
 
-**Found in:** `snazzy_fx/EXPERIMENTAL AUDIO/waveshapers/waveshpr2`
+**In:** `snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2`, `waveshpr2_fixed`
 
 ---
 
-### 6.3 Half-Rectified Ring Modulation (AC28_RectifiedRingMod)
+### 6.3 Rectified ring mod (AC28_RectifiedRingMod)
 
-Two analog inputs are read, scaled to 8-bit, and multiplied:
+Multiply A2 by A3:
 
 ```cpp
 inputA = analogRead(2) >> 2;      // 0-255
@@ -606,25 +590,29 @@ output = (inputA * inputB) >> 1;  // multiply, then halve
 dacOutput(output);
 ```
 
-**Why "rectified":** The ADC only measures positive voltages (0-5V). Standard eurorack signals are bipolar (±5V). The negative half of each input is clipped to 0V by the ADC hardware. So you're actually multiplying two **half-wave rectified** signals. This produces a more aggressive, "clangorous" sound than true ring modulation — as noted in the code comments.
+The inputs only read 0 to 5V, so the negative half of a bipolar signal reads as zero. Each input is half-wave rectified before it's multiplied, which the code comments call "very clangorous". The product can reach 32,512 after the shift, far more than the DAC's 255, and `dacOutput()` keeps only the low byte, so it wraps round as well. That wrapping adds a lot of extra grit.
 
-The `>> 1` right-shift halves the output to prevent clipping (since 255 × 255 = 65,025, which needs to fit in a byte after shifting: 65,025 >> 1 = 32,512, further truncated by the `byte` cast in `dacOutput`).
+It lowers the ADC prescaler to keep the loop fast enough for audio.
 
-The ADC prescaler is reduced for speed, keeping the processing rate high enough for audio-frequency inputs.
-
-**Found in:** `official/AC28_RectifiedRingMod`
+**In:** `official/AC28_RectifiedRingMod`
 
 ---
 
-## 7. LFO / CV Modulation Generation
+## 7. LFOs and modulation
 
-### 7.1 Float-Accumulator Triangle LFO with Warp (AC19_ShapedLFO)
+### 7.1 Shaped LFO (AC19_ShapedLFO)
 
-The canonical ArdCore LFO pattern. A `float currValue` accumulates per-millisecond using elapsed time:
+A float counts from 0 to 511 by elapsed milliseconds, and the top half is folded back down to make a triangle:
 
 ```cpp
 unsigned long now = millis();
 int elapsed = now - lastMillis;
+
+if (currValue > 255.0) {
+    currDir = 0;
+} else {
+    currDir = 1;
+}
 
 if (currDir) {
     currValue += elapsed * upStep;
@@ -632,7 +620,6 @@ if (currDir) {
     currValue += elapsed * downStep;
 }
 
-// Wrap: 0 → 255 (rising) → 511 → 0 (falling)
 while (currValue > 511.0) currValue -= 511.0;
 
 if (currValue <= 255.0) {
@@ -644,7 +631,7 @@ if (currValue <= 255.0) {
 lastMillis = now;
 ```
 
-**The warp control:** The knob controls the asymmetry between rise and fall:
+The count only goes up. It goes up at one rate in the first half, where the output rises, and another in the second half, where the output falls. A1 sets how the cycle is split between the two:
 
 ```cpp
 float msPerCycle = ((1023 - analogRead(0)) + 20) * 3.0;
@@ -654,17 +641,17 @@ upStep   = 255.0 / (msPerCycle * warpFactor);
 downStep = 255.0 / (msPerCycle * (1.0 - warpFactor));
 ```
 
-When `warpFactor` is 0.5, both rates are equal and you get a symmetric triangle. When it's close to 0, the rise is very fast and the fall is slow (ramp down). When close to 1, the rise is slow and the fall is fast (ramp up / sawtooth-ish).
+At a warp of 0.5 it's a plain triangle. Near 0 it rises almost at once and falls slowly, a falling ramp. Near 1 it rises slowly and drops fast, a rising ramp.
 
-**Trigger outputs:** D0 fires at the negative transition (peak → falling), D1 fires at the positive transition (trough → rising). These are useful for syncing other modules to the LFO cycle.
+D0 fires at the top of each cycle and D1 at the bottom, for syncing other modules.
 
-**Found in:** `official/AC19_ShapedLFO`
+**In:** `official/AC19_ShapedLFO`
 
 ---
 
-### 7.2 Sine LFO via sin() Function (ARD_SINE_LFO)
+### 7.2 Sine with sin() (ARD_SINE_LFO)
 
-Brute-force sine computation using the math library:
+By Dan Snazelle. It calls `sin()` for every sample:
 
 ```cpp
 #include <math.h>
@@ -676,54 +663,50 @@ for (int i = 0; i < nsamps; i++) {
 }
 ```
 
-**Speed control:** Instead of changing the frequency of computation, the number of samples per cycle (`nsamps`) is varied. Fewer samples = faster cycle, but coarser resolution. `nsamps` is read from CV: `analogRead(2) * 4`, giving a range of roughly 0-4092 samples per cycle.
+The speed comes from the number of samples per cycle, `nsamps = analogRead(2) * 4`: fewer samples means a faster cycle with coarser steps. `sin()` gives -1 to 1, and `* 127.5 + 127.5` turns that into 0 to 255.
 
-**The scaling:** `sin()` returns -1.0 to +1.0. Multiply by 127.5 to get -127.5 to +127.5, then add 127.5 to get 0 to 255 — filling the full DAC range.
+Each `sin()` call takes on the order of 100μs, because it's done in software. A thousand samples per cycle is about a tenth of a second, so this is an LFO, not an audio oscillator.
 
-**Performance note:** `sin()` on the ATmega328P takes roughly 100-200μs per call (implemented as a Taylor series in software). With 1000 samples per cycle, that's 100-200ms per LFO cycle — fine for sub-audio rates but this can't generate audio-frequency signals.
-
-**Found in:** `snazzy_fx/CV-LFO SKETCHES/ARD_SINE_LFO`
+**In:** `snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO`
 
 ---
 
-### 7.3 Bouncing Ball Physics Envelope (AC32_BouncingBall)
+### 7.3 Bouncing ball (AC32_BouncingBall)
 
-Simulates a ball being dropped. Each "bounce" fires a trigger, and the time between bounces shrinks exponentially:
+A dropped ball: each bounce fires a trigger, and the gap to the next bounce shrinks each time:
 
 ```cpp
 // On clock trigger: start the ball
-accValue = accStart;   // initial bounce height (from knob, 0-2000ms)
+accValue = accStart;   // first bounce time, from the knob, 0-2000ms
 isRunning = 1;
 
 // On each bounce:
-float tmp = (accValue / accStart) * 255.0;  // height → DAC value
+float tmp = (accValue / accStart) * 255.0;  // height -> DAC value
 dacOutput(floor(tmp));
 
-accValue *= accFact;    // exponential decay (0.49-0.99)
-accValue -= accFric;    // linear friction (0-100ms)
+accValue *= accFact;    // multiply down (0.49-0.99)
+accValue -= accFric;    // then subtract a fixed amount (0-100ms)
 
-nextTime = currTime + floor(accValue);  // schedule next bounce
+nextTime = currTime + floor(accValue);  // schedule the next bounce
 
 if (accValue < accLimit) {
-    isRunning = 0;  // ball has "landed"
+    isRunning = 0;  // the ball has stopped
 }
 ```
 
-**The physics model:** `accFact` is the coefficient of restitution — what fraction of energy the ball retains after each bounce. Real rubber balls have ~0.8; real steel balls ~0.95. The knob gives 0.49 to 0.99.
+`accFact` is how much of each bounce carries on to the next. `accFric` takes a fixed amount off as well, so the ball always stops, even with `accFact` near 1.
 
-`accFric` is an additional linear energy loss per bounce (friction). This ensures the ball eventually stops even with high restitution.
+The bounces speed up in a way a step sequencer can't easily do. D0 fires on each bounce, good for a drum, and D1 goes high when the ball stops. The DAC steps down with each bounce's height.
 
-**Musical use:** The decreasing intervals between bounces create a natural "bouncing ball" rhythm that's impossible to program with a regular sequencer. D0 fires a trigger on each bounce (for driving a percussion module), and D1 goes HIGH when the ball lands (useful as an end-of-cycle signal).
-
-**Found in:** `official/AC32_BouncingBall`
+**In:** `official/AC32_BouncingBall`
 
 ---
 
-## 8. Envelope Generators
+## 8. Envelopes
 
-### 8.1 Linear Attack/Decay (AC25_VCAREnvelope)
+### 8.1 Attack-decay (AC25_VCAREnvelope)
 
-A float accumulator with per-loop-iteration increment/decrement. State machine: 0=idle, 1=rising, -1=falling.
+A float that goes up by one amount per loop and down by another. Its state is 0 (off), 1 (rising) or -1 (falling):
 
 ```cpp
 if (envState == 1) {
@@ -734,95 +717,91 @@ if (envState == 1) {
 
 if (currValue > 255.0) {
     currValue = 255.0;
-    envState = -1;  // transition to decay
-    // fire trigger on D0 (peak reached)
+    envState = -1;  // start falling
+    // trigger on D0 (top reached)
 }
 
 if (currValue < 0.0) {
     currValue = 0.0;
-    envState = 0;   // envelope complete
-    // fire trigger on D1 (envelope ended)
+    envState = 0;   // done
+    // trigger on D1 (end of envelope)
 }
 
 dacOutput((byte)currValue);
 ```
 
-**The rate calculation:**
+The rates:
 
 ```cpp
 int riseSetting = analogRead(0) + analogRead(2) + 5;
 riseValue = 255.0 / riseSetting;
 ```
 
-The attack time is the sum of Knob 1 and CV In 1 (plus 5 to prevent division by zero). At minimum settings (riseSetting = 5), `riseValue = 255/5 = 51` — the envelope reaches peak in about 5 loop iterations (very fast). At maximum (riseSetting ≈ 2051), `riseValue ≈ 0.12` — taking ~2100 iterations (slow envelope).
+Knob plus CV, plus 5 so it never divides by zero. At the minimum, 5, the step is 51 and it reaches the top in 5 passes. At the maximum, about 2051, the step is about 0.12 and it takes about 2,100 passes. Adding the knob and the CV means the knob sets the shortest time and the CV lengthens it.
 
-**Why knob + CV are summed:** This gives you a base attack time from the knob plus voltage control from the jack. It's additive rather than multiplicative, so the knob sets a minimum time and the CV extends it.
+AC29 is the looping version: it starts again as soon as it reaches zero, so it runs as an LFO with separate rise and fall times.
 
-**The looping variant** (AC29) restarts the envelope immediately when it reaches zero — creating a looping AR envelope that acts as an LFO with controllable attack and decay shapes.
-
-**Found in:** `official/AC25_VCAREnvelope`, `official/AC29_VCADLoopEnvelope`
+**In:** `official/AC25_VCAREnvelope`, `official/AC29_VCADLoopEnvelope`
 
 ---
 
-### 8.2 Full ADSR with Gate Tracking (ADSR_ENV)
+### 8.2 ADSR (ADSR_ENV)
 
-Extends the AD pattern with sustain and release phases. Gate detection from A2 (`analogRead(2) > 120`) drives attack/decay; gate going LOW triggers release. Each phase has its own rate constant from a knob.
+By Dan Snazelle. Attack and decay as above, then sustain while the gate is held, then release. A2 is the gate: above 120 counts it's on, below 100 it's off. The gap between the two stops a slow or noisy gate from chattering. A0 sets attack, A1 decay and A3 release. The sustain level is fixed in the code, with a comment telling you where to change it.
 
-**Found in:** `snazzy_fx/ADSR envelope/ADSR_ENV`
+**In:** `snazzy_fx/ADSR_envelope/ADSR_ENV`
 
 ---
 
-## 9. Sequencing and Rhythm Generation
+## 9. Sequencing and rhythm
 
-### 9.1 Euclidean Rhythm Generator (AC30_DualEuclidean)
+### 9.1 Euclidean rhythms (AC30_DualEuclidean)
 
-Implements the Bjorklund algorithm: distribute N pulses across M steps as evenly as possible.
+Spread N hits as evenly as possible over M steps:
 
 ```cpp
 void euCalc(int ar) {
     for (int i = 0; i < 32; i++) euArray[ar][i] = 0;
 
     if (inPulses[ar] >= inSteps[ar]) {
-        // More pulses than steps: every step is active
+        // as many hits as steps: every step
         for (int i = 0; i < inSteps[ar]; i++) euArray[ar][loc++] = 1;
     } else {
         int offs = inSteps[ar] - inPulses[ar];
-        int ppc = offs / inPulses[ar];    // gaps per pulse
-        int rmd = offs % inPulses[ar];    // remainder gaps
+        int ppc = offs / inPulses[ar];    // gaps per hit
+        int rmd = offs % inPulses[ar];    // gaps left over
 
         for (int i = 0; i < inPulses[ar]; i++) {
-            euArray[ar][loc++] = 1;                 // place a pulse
+            euArray[ar][loc++] = 1;                 // a hit
             for (int j = 0; j < ppc; j++)
-                euArray[ar][loc++] = 0;             // fill gaps evenly
-            if (i < rmd) euArray[ar][loc++] = 0;    // distribute remainder
+                euArray[ar][loc++] = 0;             // its gaps
+            if (i < rmd) euArray[ar][loc++] = 0;    // one extra for the first few
         }
     }
 }
 ```
 
-**How it distributes pulses:** Say you have 3 pulses in 8 steps. That's 5 gaps to distribute across 3 pulses. `ppc = 5/3 = 1` gap per pulse, `rmd = 5%3 = 2` remaining gaps. So the first 2 pulses get 2 gaps each (1 + 1 remainder), and the last pulse gets 1 gap: `[1,0,0, 1,0,0, 1,0]`. This is the Euclidean rhythm E(3,8) — which is the Cuban tresillo pattern.
+Take 3 hits in 8 steps. That leaves 5 gaps for 3 hits: `ppc = 1` each, with `rmd = 2` left over. The first two hits get two gaps and the last gets one: `[1,0,0, 1,0,0, 1,0]`. That's E(3,8), the tresillo.
 
-**Dual rhythms:** Two independent Euclidean patterns run from a single external clock. Each has its own steps/pulses knobs (A0/A2 for rhythm A, A1/A3 for rhythm B). The rhythms are output on D0 and D1.
+There are two patterns on one clock, each with its own steps and hits controls (A0/A2 for the first, A1/A3 for the second), out on D0 and D1. A pattern is only worked out again when its knobs change, not on every loop, so the loop stays quick.
 
-**Dynamic recalculation:** The pattern is recalculated only when the knob values change (detected by comparing to previous readings), not every loop iteration. This prevents audio glitches from spending too long in the calculation function.
-
-**Found in:** `official/AC30_DualEuclidean`
+**In:** `official/AC30_DualEuclidean`
 
 ---
 
-### 9.2 Analog Shift Register (AC21_ShiftRegister)
+### 9.2 Analog shift register (AC21_ShiftRegister)
 
-Emulates the classic analogue shift register: sample incoming CV on each clock, store in a circular array, and replay from a knob-selected offset:
+On each clock, store the input, then play back one of the stored values:
 
 ```cpp
 if (clkState == HIGH) {
     clkState = LOW;
 
-    value[currValue] = analogRead(2) >> 2;  // record current input
+    value[currValue] = analogRead(2) >> 2;  // store the input
     currValue++;
     if (currValue > 8) currValue = 0;
 
-    int tempOffset = 7 - (analogRead(0) >> 7);  // knob selects 1-8 step offset
+    int tempOffset = 7 - (analogRead(0) >> 7);
     int outStep = (currValue + tempOffset) % 9;
     int outValue = value[outStep];
 
@@ -831,45 +810,42 @@ if (clkState == HIGH) {
 }
 ```
 
-**How it works:** On each clock tick, the current CV input is stored at position `currValue` in a 9-element circular buffer. The output reads from a different position in the buffer, offset by the Knob 1 value. Since the buffer is circular and the write position advances each tick, the output replays values from 1-8 ticks ago.
+Nine slots in a ring. The write position moves on one each clock, and A0 picks which slot to read, so the output is the input from 1 to 8 clocks ago.
 
-**The transposition trick:** Knob 2 is divided by 41 (giving 0-24) then offset by -12, giving a range of -12 to +12. Left-shifted by 2 (`<< 2`), this becomes ±48 DAC steps — approximately ±12 semitones.
+A1 transposes: divided by 41 it gives 0-24, minus 12 gives -12 to +12, and `<< 2` turns semitones into DAC steps.
 
-**Found in:** `official/AC21_ShiftRegister`
-
----
-
-### 9.3 Mathematical Sequence Clocking (community sketches)
-
-Some community sketches use mathematical sequences as clock sources:
-- **Prime numbers** — a master counter is checked against a list of primes; clock fires only on prime-numbered steps
-- **Fibonacci sequence** — inter-trigger intervals follow the Fibonacci series
-- **Recaman's sequence** — a sequence where each step goes back N if that position is available, or forward N otherwise
-
-These produce rhythms that are structured but non-repeating (or very long cycles), which is impossible with standard clock dividers or Euclidean patterns.
-
-**Found in:** `community/asct/` sketches
+**In:** `official/AC21_ShiftRegister`
 
 ---
 
-## 10. Quantization Techniques
+### 9.3 Number sequences as clocks (ASCTard007)
 
-### 10.1 Bit-Shift Quantization
+Ascetic's Rat_s_h__t counts clocks and fires when the count fits a rule. With the knob below noon the rule is a plain division: count modulo 1 to 128 for the internal clock, 1 to 64 for the outputs. Above noon it switches through primes, Fibonacci numbers, Fermat's little theorem and Recamán's sequence. A0 sets the rule for the internal clock, A2 for D0 and A3 for D1.
 
-The simplest approach — divide the 10-bit ADC reading into N equal steps using right-shifts:
+These give rhythms with a structure that doesn't repeat the way a divider or a Euclidean pattern does.
+
+**In:** `community/asct/ASCTard007_Rat_s_h___t`
+
+---
+
+## 10. Quantizing
+
+### 10.1 Shifting
+
+The quick way, dividing the reading into 64 steps:
 
 ```cpp
-int note = analogRead(2) >> 4;   // 0-63 (roughly semitones)
-dacOutput(note << 2);             // scale back to 0-252
+int note = analogRead(2) >> 4;   // 0-63
+dacOutput(note << 2);             // 0-252
 ```
 
-This is fast (single CPU cycle per shift) but the step boundaries don't perfectly align with 1V/octave tuning.
+It's fast, but the steps are 16 counts and a semitone on the input is about 17, so the steps drift off the notes as the voltage goes up.
 
 ---
 
-### 10.2 Lookup Table Quantizer (AC02_Quantizer)
+### 10.2 Table of boundaries (AC02_Quantizer)
 
-For precise 1V/octave quantization, a 61-entry lookup table stores the ADC thresholds for each semitone boundary:
+AC02 keeps a table of 61 thresholds, one per semitone over five octaves:
 
 ```cpp
 const int qArray[61] = {
@@ -882,72 +858,70 @@ int vQuant(int v) {
     for (int i = 0; i < 61; i++) {
         if (v >= qArray[i]) tmp = i;
     }
-    return tmp;  // 0-60 semitone number
+    return tmp;  // semitone 0-60
 }
 ```
 
-**Why a lookup table:** The relationship between DAC voltage and musical pitch isn't perfectly linear (though it's close on the ArdCore). The table compensates for any non-linearity in the DAC ladder.
+The thresholds are about 17 counts apart, one semitone on the input, and each sits half a semitone below its note, so a voltage rounds to the nearest note instead of the one below.
 
-**The linear scan:** Searching all 61 entries every time is O(n) — not the fastest, but at the loop rates involved (~2-3kHz), it's completely fine. A binary search would be faster but harder to read and unnecessary here.
+It checks all 61 every time. That's slow as searches go, but the loop only runs a few thousand times a second and it's quick enough.
 
-**Output scaling:** The returned semitone number (0-60) is left-shifted by 2 to fill the 0-255 DAC range: `dacOutput(outValue << 2)`.
+The semitone number goes out at 4 DAC steps each: `dacOutput(outValue << 2)`.
 
-**Found in:** `official/AC02_Quantizer`
+**In:** `official/AC02_Quantizer`
 
 ---
 
-## 11. Utility Techniques Used Everywhere
+## 11. Things used everywhere
 
-### 11.1 ADC Prescaler Speed Hack
+### 11.1 Faster ADC
 
-Standard `analogRead()` uses a prescaler of 128, giving ~100μs per conversion. For audio-rate sketches, reducing the prescaler to 16 gives ~13μs — about 8x faster:
+`analogRead()` normally uses prescaler 128 and takes about 100μs. Prescaler 16 takes about 13μs:
 
 ```cpp
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 
-sbi(ADCSRA, ADPS2);   // prescaler = 16
+sbi(ADCSRA, ADPS2);   // prescaler 16
 cbi(ADCSRA, ADPS1);
 cbi(ADCSRA, ADPS0);
 ```
 
-**The trade-off:** Lower prescaler = faster conversion but reduced accuracy. At prescaler 16, you lose about 1-2 bits of effective resolution. For 8-bit audio output, this doesn't matter — you're throwing away the bottom 2 bits anyway.
+A faster conversion is a less accurate one, by a bit or two. With 8-bit output that doesn't matter: the bottom two bits get thrown away anyway.
 
-**Found in:** Almost every audio-rate sketch (AC24, LFSR, NOISEMAKER, all bytebats, all waveshapers)
+**In:** 47 files set the prescaler, among them AC23, AC24, AC28, the LFSRs, most of the bytebeats, the delays and the waveshapers.
 
 ---
 
-### 11.2 De-Jitter Hysteresis Filter
+### 11.2 deJitter
 
-Analog reads are inherently noisy. The ArdCore convention is a `deJitter()` function that rejects small changes:
+Readings wobble. The official sketches ignore changes smaller than a threshold:
 
 ```cpp
 int deJitter(int v, int test)
 {
     if (abs(v - test) > 8) {
-        return v;       // significant change — accept
+        return v;       // real change, take it
     }
-    return test;        // noise — keep old value
+    return test;        // wobble, keep the old value
 }
 ```
 
-**Usage:**
 ```cpp
 int cvValue = 0;
 cvValue = deJitter(analogRead(2), cvValue);
 ```
 
-**Threshold choices:** `> 8` for most purposes, `> 2` for quantizers that need higher precision, or removed entirely for gate thresholds.
+`> 8` for most things, `> 2` for the quantizers, and nothing at all for gate inputs.
 
-**Found in:** Almost every official sketch
+**In:** most of `official/`.
 
 ---
 
-### 11.3 Direct Port Manipulation for DAC Output
+### 11.3 Two DAC routines
 
-Two versions exist in the codebase:
+The official sketches use the port version:
 
-**Fast version (official sketches):**
 ```cpp
 void dacOutput(byte v)
 {
@@ -956,9 +930,10 @@ void dacOutput(byte v)
 }
 ```
 
-This is two port writes with bit masking — takes about 1μs.
+Two port writes, about 1μs.
 
-**Slow version (snazzy_fx sketches):**
+Many of the Snazzy FX sketches use a bit-at-a-time version:
+
 ```cpp
 void dacOutput(long v)
 {
@@ -974,79 +949,86 @@ void dacOutput(long v)
 }
 ```
 
-This writes each bit individually — about 4x slower. Both produce the same output, but the fast version also has the advantage of being **glitch-free**: both ports are written in single operations, so intermediate states (where some bits have changed but others haven't) are minimised. The slow version can produce brief voltage glitches between bit writes that may be audible as high-frequency noise on the output.
+It gives the same result more slowly. It also changes the output in eight small steps instead of two, so for a moment between writes the DAC holds a value that's partly old and partly new. At audio rates those in-between values can be heard as a faint high-frequency hash.
+
+Both keep only the low 8 bits of what they're given, which is why products and sums that overflow wrap round instead of clipping (2.4, 6.3).
 
 ---
 
-### 11.4 Trigger/Gate Output Pattern
+### 11.4 Triggers
 
-The universal pattern for outputting triggers on the digital pins:
+The pattern in every sketch that sends triggers:
 
 ```cpp
-// Fire trigger:
+// Fire:
 digState[0] = HIGH;
 digMilli[0] = millis();
 digitalWrite(digPin[0], HIGH);
 
-// Turn off after trigTime ms (in loop):
+// Later, in loop():
 if ((digState[0] == HIGH) && (millis() - digMilli[0] > trigTime)) {
     digState[0] = LOW;
     digitalWrite(digPin[0], LOW);
 }
 ```
 
-**trigTime** is typically 10-25ms. This pattern appears in every sketch that outputs triggers.
+`trigTime` is usually 10 to 25ms.
 
 ---
 
-### 11.5 Timer ISR Setup for Audio Output
+### 11.5 Timer interrupts for audio
 
-For audio-rate output where pitch stability matters, a hardware timer ISR replaces `loop()` as the sample output clock:
+When the pitch has to be steady, a timer interrupt sends the samples out instead of `loop()`.
 
-**Timer2 CTC mode** (used in AC33 wavetable oscillator):
+**Timer2, CTC** (AC33):
+
 ```cpp
 cli();
 TCCR2A = (1 << WGM21);     // CTC mode
-TCCR2B = (1 << CS21);       // /8 prescaler → 2MHz tick
-OCR2A  = 29;                // compare value → 66.67kHz
-TIMSK2 = (1 << OCIE2A);     // enable compare match interrupt
+TCCR2B = (1 << CS21);       // prescaler 8, 2MHz tick
+OCR2A  = 29;                // every 30 ticks, 66.67kHz
+TIMSK2 = (1 << OCIE2A);     // compare interrupt on
 sei();
 
 ISR(TIMER2_COMPA_vect) {
-    // Output one sample — runs at fixed 66.67kHz rate
+    // one sample, 66.67kHz
 }
 ```
 
-**Timer2 overflow mode** (used in Auduino):
+**Timer2, overflow** (Auduino, SDIY noise):
+
 ```cpp
 TCCR2A = _BV(COM2B1) | _BV(WGM20);   // phase-correct PWM
-TCCR2B = _BV(CS20);                    // no prescaler → 31.25kHz
+TCCR2B = _BV(CS20);                    // no prescaler, about 31kHz
 TIMSK2 = _BV(TOIE2);                   // overflow interrupt
 
 SIGNAL(TIMER2_OVF_vect) {
-    // Output one sample — runs at ~31.25kHz
+    // one sample, about 31kHz
 }
 ```
 
-**Timer1 CTC mode** (used in Dead City Radio):
+**Timer1, OCR1A as the top** (Dead City Radio):
+
 ```cpp
 TCCR1A |= (1 << WGM10);
-TCCR1B |= (1 << WGM13) | (1 << CS11);
-OCR1A = 200;                // variable — controls pitch
+TCCR1B |= (1 << WGM13) | (1 << CS11);   // phase and frequency correct PWM, prescaler 8
+OCR1A = 200;                            // changed at run time for pitch
 TIMSK1 |= (1 << OCIE1A);
 
 ISR(TIMER1_COMPA_vect) {
-    // Output one sample
+    // one sample
 }
 ```
 
-**The key difference:** Timer2 CTC with a fixed OCR2A gives a constant sample rate (the wavetable oscillator controls pitch via the phase increment). Timer1 with a variable OCR1A controls pitch by changing the sample rate itself (Dead City Radio approach — the noise buffer plays faster or slower).
+AC33 keeps the sample rate fixed and sets pitch with the phase increment. Dead City Radio changes the sample rate itself, so the same buffer plays faster or slower.
+
+Timer0 runs `millis()` and `delay()`, which is why all three of these leave it alone. Timer2 also drives PWM on pins 3 and 11, so a sketch that takes Timer2 over shouldn't `analogWrite()` to D0 or to pin 11.
 
 ---
 
-### 11.6 Compound Sketch Pattern
+### 11.6 Compound sketches
 
-Pack multiple programs into one .ino and select at boot time based on knob position:
+Several programs in one upload, picked by the A0 knob at power-up:
 
 ```cpp
 int sketchVar = analogRead(0) >> 8;  // 0-3
@@ -1068,15 +1050,15 @@ void loop() {
 }
 ```
 
-This avoids having to re-upload to switch between related programs. Set the knob before powering on, and the module runs a different program.
+Set the knob, power up, and you get that program without re-uploading.
 
-**Found in:** `official/CP01_Compound01`, `official/CP02_Compound02`
+**In:** `official/CP01_Compound01`, `official/CP02_Compound02`
 
 ---
 
-### 11.7 EEPROM Persistent Storage
+### 11.7 EEPROM
 
-For saving sequences or settings between power cycles. Uses a 4-byte tag for data integrity:
+Settings and sequences that survive power-off. A four-byte tag goes first:
 
 ```cpp
 #include <EEPROM.h>
@@ -1092,55 +1074,57 @@ void writeEEPROM() {
 }
 ```
 
-On boot, the tag is checked first. If it doesn't match, the data is initialised to defaults. This prevents reading garbage from fresh EEPROM.
+At start-up the sketch checks the tag. If it isn't there, the EEPROM holds something else (or nothing), and the sketch starts from defaults instead.
 
-**Write cycle limit:** EEPROM is rated for ~100,000 write cycles. Only write on explicit user action (mode change, etc.), never on every loop iteration.
+EEPROM is good for about 100,000 writes per cell, so save when the player does something, like changing mode, and never on every loop.
 
-**Found in:** `official/AC23_VoltageRecorder`, `official/AC27_101SEQ`
-
----
-
-## 12. Summary: Tricks at a Glance
-
-| Category | Technique | Key Principle | Example Sketch |
-|----------|-----------|---------------|----------------|
-| **Oscillator** | Timed-toggle square | `micros()` half-period lookup | AC24_SimpleVCO |
-| **Oscillator** | Ramp counter saw/tri | `for` loop incrementing DAC | ARDCORE_TRIANGLE |
-| **Oscillator** | Phase accumulator + wavetable | 16-bit acc → 8-bit index → PROGMEM | AC33_SSQScreecherWT |
-| **Oscillator** | Dual-grain granular | Two triangle accumulators + exponential decay | ARDCORE_auduino_v5 |
-| **Noise** | 16-bit Fibonacci LFSR | XOR taps at x^16+x^14+x^13+x^11+1 | LFSR |
-| **Noise** | 32-bit Galois LFSR | Single-operation feedback `^ 0xD0000001u` | LFSR32, SDIY_NOISE |
-| **Noise** | XOR-shift PRNG + buffer | Double-buffered ISR playback | DeadCityRadio |
-| **Noise** | ADC multiplication | Aliasing from overflow truncation | ARDCORE_NOISEMAKER |
-| **Bytebeat** | Counter arithmetic | `(t*9 & t>>4 \| t*5 & t>>7)` | drumsandmelody |
-| **CA Synthesis** | 1D Wolfram rules | 3-cell neighbourhood → rule byte lookup | CELLULAR_AUTOMATA_SYNTH |
-| **CA Synthesis** | Counter-nibble fractal | Byte extraction + masking + threshold | fraktal_synth |
-| **Delay** | Circular buffer + feedback | `delArr[pointer] = input + delayed * fb` | BLOG_DELAY_BEST |
-| **Reverb** | Dual-tap comb filter | Two fixed-offset reads from 1800-byte buffer | reverb_prttygood |
-| **Distortion** | Nibble swap | Extract high/low 4-bit, recombine swapped | DISTORTION |
-| **Distortion** | Bit-shift XOR | Array of shifted copies, XOR two together | waveshpr2 |
-| **Ring Mod** | Multiply two inputs | Half-rectified due to unipolar ADC | AC28_RectifiedRingMod |
-| **LFO** | Float accumulator + warp | Asymmetric up/down rates per millisecond | AC19_ShapedLFO |
-| **LFO** | sin() brute force | Variable samples-per-cycle for speed | ARD_SINE_LFO |
-| **Envelope** | Float AD accumulator | State machine: 0/1/-1, per-iteration step | AC25_VCAREnvelope |
-| **Envelope** | Bouncing ball physics | Exponential restitution + linear friction | AC32_BouncingBall |
-| **Sequencing** | Euclidean rhythm | Bjorklund pulse distribution algorithm | AC30_DualEuclidean |
-| **Sequencing** | Analog shift register | Circular buffer, clock-advanced, offset read | AC21_ShiftRegister |
-| **Quantization** | Lookup table 1V/oct | 61-entry threshold table, linear scan | AC02_Quantizer |
-| **Utility** | ADC prescaler hack | `/16` instead of `/128` for 8x faster reads | everywhere |
-| **Utility** | De-jitter hysteresis | Reject changes < threshold | everywhere |
-| **Utility** | Fast port DAC write | Two masked PORTB/PORTD writes | everywhere |
-| **Utility** | Timer ISR sample clock | CTC mode at 31-67kHz for stable audio output | AC33, Auduino, DCR |
+**In:** `official/AC27_101SEQ`, and the compound sketches CP01 and CP02, which include it.
 
 ---
 
-## 13. What's NOT in This Repo (But Could Be)
+## 12. Summary
 
-Techniques that are feasible on the ATmega328P but aren't represented in the current sketch collection:
+| Area | Technique | How | Sketch |
+|------|-----------|-----|--------|
+| Oscillator | Timed square | `micros()` against a half-period table | AC24_SimpleVCO |
+| Oscillator | Counting saw/triangle | `for` loop into the DAC | ARDCORE_TRIANGLE |
+| Oscillator | Phase accumulator + wavetable | 16-bit accumulator, top 8 bits index a flash table | AC33_SSQScreecherWT |
+| Oscillator | Granular | Two decaying triangle grains restarted by a master oscillator | ARDCORE_auduino_v5 |
+| Oscillator | FM | One sine modulating another | fac_fm_osc |
+| Noise | 16-bit LFSR | Taps 16, 14, 13, 11 | LFSR |
+| Noise | 32-bit Galois LFSR | `^ 0xD0000001u` in one line | LFSR32, SDIY_ARDCORE_NOISE |
+| Noise | Buffered generator | Buffer filled in `loop()`, played by Timer1 | DeadCityRadio |
+| Noise | Multiply and wrap | Product cut to 8 bits | ARDCORE_NOISEMAKER |
+| Bytebeat | Counter expressions | `(t*9 & t>>4 \| t*5 & t>>7)` | drumsandmelody |
+| Automata | Wolfram rules | 3-cell neighbourhood, rule byte | CELLULAR_AUTOMATA_SYNTH |
+| Automata | Counter arithmetic | Mask and multiply the counter's bytes | fraktal_synth |
+| Delay | Ring buffer + feedback | `delArr[pointer] = input + delayed * fb` | BLOG_DELAY_BEST |
+| Echo | Two fixed taps | 900 and 1,799 samples back | reverb_prttygood |
+| Distortion | Nibble swap | Swap the top and bottom 4 bits | DISTORTION |
+| Distortion | XOR of shifts | XOR two shifted copies | waveshpr2 |
+| Ring mod | Multiply two inputs | Half-rectified by the 0-5V inputs | AC28_RectifiedRingMod |
+| LFO | Skewed triangle | Two rates for the two halves | AC19_ShapedLFO |
+| LFO | `sin()` | Samples per cycle sets the speed | ARD_SINE_LFO |
+| Envelope | Attack-decay | State 0/1/-1, fixed step per loop | AC25_VCAREnvelope |
+| Envelope | Bouncing ball | Multiply down plus fixed loss per bounce | AC32_BouncingBall |
+| Rhythm | Euclidean | Spread N hits over M steps | AC30_DualEuclidean |
+| Rhythm | Number sequences | Primes, Fibonacci, Recamán | ASCTard007 |
+| Sequencer | Analog shift register | Ring of 9, read from an offset | AC21_ShiftRegister |
+| Quantizer | Threshold table | 61 boundaries, half a semitone low | AC02_Quantizer |
+| Utility | Faster ADC | Prescaler 16 instead of 128 | many |
+| Utility | deJitter | Ignore small changes | official/ |
+| Utility | Port DAC write | Two masked port writes | official/ |
+| Utility | Timer sample clock | Timer1 or Timer2 interrupt at 31-67kHz | AC33, Auduino, DCR |
 
-- **Band-limited wavetables** — pre-computed tables with harmonics below Nyquist for alias-free synthesis. Would reduce the metallic aliasing artifacts at high pitches. Costs more flash (multiple tables per waveform at different frequency ranges).
-- **Karplus-Strong synthesis** — a short delay buffer with filtered feedback creates plucked-string sounds. The 900-sample delay buffer from the delay sketches would be sufficient.
-- **FM synthesis** — two phase accumulators where one modulates the other's frequency. The Auduino's dual-oscillator architecture is already close to this.
-- **Wavetable morphing** — interpolating between two wavetables using a CV. Cross-fade by computing `(1-alpha) * tableA[i] + alpha * tableB[i]`. Doubles the PROGMEM reads per sample but should fit within the ISR budget.
-- **Sample playback** — storing short audio samples in PROGMEM and playing them back at variable rates. Limited to ~3 seconds at 8kHz/8-bit due to the 32KB flash constraint. Would need external flash/SD for anything longer.
-- **Formant synthesis** — multiple bandpass filters or formant-shaped wavetables for vowel-like sounds. Feasible with PROGMEM lookup tables.
+---
+
+## 13. Not in the repo yet
+
+Things the ATmega328P could do that no sketch here does:
+
+- **Band-limited wavetables.** Several versions of each table, with fewer harmonics for higher notes, to cut the aliasing at the top of the range. Costs flash.
+- **Karplus-Strong.** A short delay line with filtered feedback gives plucked strings. The 900-sample buffer from the delays is long enough.
+- **Wavetable morphing.** Crossfade between two tables with a CV: `(1 - a) * tableA[i] + a * tableB[i]`. Twice the flash reads per sample, which fits in AC33's interrupt.
+- **Formants.** Band-pass filters, or tables shaped like vowels, for vocal sounds.
+
+Sample playback and FM are both here already: `fac_drums` plays eight drum samples from flash, and `fac_fm_osc` is a two-operator FM voice.

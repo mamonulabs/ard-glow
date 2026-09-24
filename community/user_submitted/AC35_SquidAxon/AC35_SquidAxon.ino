@@ -94,6 +94,10 @@
 //  Output Expander: 8 bits of output exposed
 //
 //  Created:  04 Apr 2026  Ported from NLC VCV Rack plugin
+//  Modified: 24 Sep 2026  squidDiode() now matches the NLC original:
+//                         zero below the knee, x12.1 gain, +/-9V clamp.
+//                         The old version used |d| + |d| instead of
+//                         d + |d|, so it kicked hard at zero input.
 //
 //  ============================================================
 //
@@ -225,16 +229,17 @@ void isr()
 //  output below a threshold ("knee"), then a steep quadratic rise.
 //
 //  Original NLC formula (float, ±10V domain):
-//    sign(x) × (|abs(x×0.1) - 0.667| + |abs(x×0.1) - 0.667|)² × 12.1
+//    d = |x×0.1| - 0.667
+//    sign(x) × (d + |d|)² × 12.1
 //
-//  Simplified: the inner term is just 2×|x×0.1 - 0.667| (always ≥0),
-//  then squared and scaled. The 0.667 is the diode knee voltage.
+//  d + |d| is 0 when d is negative and 2d when it's positive, so the
+//  diode gives nothing below the 0.667 knee and a squared rise above it.
 //
 //  Integer port (±1023 domain):
 //    0.1 scaling  → divide by 10
 //    0.667 knee   → 68 in our scale (0.667 × 1023 / 10 ≈ 68)
-//    12.1 gain    → absorbed into /84L divisor after squaring
-//                   (tuned empirically to match NLC output range)
+//    12.1 gain    → × 121 / 1023 after squaring (12.1 volts-to-units)
+//    ±9V clamp    → ±921
 //
 //  Input:  signed int, ±1023 scale (but can exceed with 4x gain)
 //  Output: signed int, clamped to ±1023
@@ -245,11 +250,11 @@ int squidDiode(int input)
 
   long scaled = absIn / 10;          // × 0.1
   long diodeIn = scaled - 68L;       // subtract knee voltage
-  if (diodeIn < 0) diodeIn = -diodeIn;  // absolute value
-  long stage2 = diodeIn + diodeIn;   // × 2 (double-rectified)
-  long stage3 = (stage2 * stage2) / 84L;  // square and scale
+  if (diodeIn < 0) diodeIn = 0;      // below the knee: no output
+  long stage2 = diodeIn + diodeIn;   // d + |d| = 2d above the knee
+  long stage3 = (stage2 * stage2) * 121L / 1023L;  // square, × 12.1
 
-  if (stage3 > 1023) stage3 = 1023;
+  if (stage3 > 921) stage3 = 921;    // ±9V, as in the original
 
   return (int)(stage3 * sign);
 }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ArdCore Sketches — Eurorack Arduino Collection</title>
-  <meta name="description" content="A curated collection of 153 Arduino sketches for the SnazzyFX ArdCore eurorack module. Envelopes, sequencers, chaos generators, oscillators, and more." />
+  <title>ArdCore Sketches</title>
+  <meta name="description" content="166 Arduino sketches for the Snazzy FX ArdCore eurorack module: envelopes, sequencers, chaos, oscillators and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -211,7 +211,8 @@
     /* ── MODULE SVG ── */
     .hero-module {
       flex-shrink: 0;
-      width: 280px;
+      width: 220px;
+      filter: drop-shadow(0 24px 40px rgba(0,0,0,0.6));
       animation: float 6s ease-in-out infinite;
     }
 
@@ -424,6 +425,86 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* ── SKETCH DETAIL (unfolds under a catalog row) ── */
+    .sketch-item .sketch-card {
+      width: 100%;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .sketch-chev {
+      flex-shrink: 0;
+      color: var(--muted);
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .sketch-item.open .sketch-chev { transform: rotate(180deg); }
+    .sketch-item.open .sketch-card { border-color: #333; border-radius: 10px 10px 0 0; }
+
+    .sketch-detail {
+      display: none;
+      grid-template-columns: 170px 1fr;
+      gap: 36px;
+      padding: 28px;
+      background: #121212;
+      border: 1px solid #333;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .sketch-item.open .sketch-detail { display: grid; }
+
+    .sd-how {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      margin-bottom: 18px;
+      max-width: 62ch;
+    }
+
+    .sd-list { list-style: none; margin-bottom: 18px; }
+
+    .sd-list li {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 14px;
+      padding: 7px 10px;
+      margin: 0 -10px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .sd-list li:hover { background: #1b1b1b; }
+
+    .sd-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--amber-lt);
+      padding-top: 1px;
+    }
+
+    .sd-extra { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+
+    .sd-code {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      text-decoration: none;
+    }
+
+    .sd-code:hover { color: var(--amber-lt); }
+
+    @media (max-width: 768px) {
+      .sketch-detail { grid-template-columns: 1fr; padding: 20px; gap: 24px; }
+      .sd-panel { width: 150px; margin: 0 auto; }
+      .sd-list li { grid-template-columns: 80px 1fr; }
     }
 
     .no-results {
@@ -763,6 +844,78 @@
     .roadmap-tag.soon { background: #1a1a1a; color: #aaaaaa; }
 
     /* ── DIVIDER ── */
+    /* ── HISTORY ── */
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .history-text p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      margin-bottom: 20px;
+      max-width: 60ch;
+    }
+
+    .history-text p strong { color: var(--text); font-weight: 600; }
+
+    .history-photo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .history-pair {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+    }
+
+    .history-pair > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .history-pair img {
+      height: 460px;
+      width: auto;
+      max-width: 100%;
+      border-radius: 6px;
+      display: block;
+    }
+
+    .history-pair span {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    @media (max-width: 768px) {
+      .history-pair img { height: 360px; }
+    }
+
+    .history-photo figcaption {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .history-photo figcaption a { color: var(--amber); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      .history-grid { grid-template-columns: 1fr; gap: 32px; }
+    }
+
     .divider {
       border: none;
       border-top: 1px solid var(--border);
@@ -811,7 +964,7 @@
       nav { padding: 16px 24px; }
       .nav-links { display: none; }
       .hero { flex-direction: column; padding: 60px 24px 48px; text-align: center; }
-      .hero-module { width: 200px; }
+      .hero-module { width: 170px; }
       .hero-actions { justify-content: center; }
       .hero-sub { margin: 0 auto 40px; }
       .stats-bar { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; }
@@ -836,6 +989,7 @@
   <nav>
     <div class="nav-logo">Ard<span>Core</span></div>
     <ul class="nav-links">
+      <li><a href="#history">History</a></li>
       <li><a href="#catalog">Catalog</a></li>
       <li><a href="#hardware">Hardware</a></li>
       <li><a href="#techniques">DSP Guide</a></li>
@@ -849,9 +1003,9 @@
   <!-- HERO -->
   <div class="hero">
     <div class="hero-text">
-      <div class="hero-badge">Open Source Collection</div>
+      <div class="hero-badge">Open source</div>
       <h1>Arduino sketches for <em>eurorack</em></h1>
-      <p class="hero-sub">A curated library of sketches for the SnazzyFX ArdCore module — envelopes, sequencers, chaos generators, oscillators, bytebeat, and more. All on an ATmega328P.</p>
+      <p class="hero-sub">Code for the Snazzy FX ArdCore: envelopes, sequencers, chaos, oscillators, bytebeat and a lot of odd stuff in between. It all runs on one ATmega328P.</p>
       <div class="hero-actions">
         <a class="btn-primary" href="#catalog">
           <span class="btn-icon">◈</span> Browse Sketches
@@ -863,82 +1017,13 @@
       <p class="hero-note">ATmega328P · 8-bit DAC · 16MHz · 2KB SRAM</p>
     </div>
 
-    <div class="hero-module">
-      <svg viewBox="0 0 240 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Module panel -->
-        <rect x="10" y="10" width="220" height="380" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-        <!-- Title -->
-        <text x="120" y="42" text-anchor="middle" font-family="Syne, sans-serif" font-size="18" font-weight="800" fill="#d97706">ARDCORE</text>
-        <text x="120" y="58" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#555">SnazzyFX · ATmega328P</text>
-
-        <!-- Knobs -->
-        <circle cx="75" cy="100" r="24" fill="#111" stroke="#333" stroke-width="1"/>
-        <circle cx="75" cy="100" r="17" fill="#1e1e1e"/>
-        <line x1="75" y1="100" x2="75" y2="81" stroke="#d97706" stroke-width="2" stroke-linecap="round">
-          <animateTransform attributeName="transform" type="rotate" from="0 75 100" to="360 75 100" dur="8s" repeatCount="indefinite"/>
-        </line>
-        <text x="75" y="135" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 1</text>
-
-        <circle cx="165" cy="100" r="24" fill="#111" stroke="#333" stroke-width="1"/>
-        <circle cx="165" cy="100" r="17" fill="#1e1e1e"/>
-        <line x1="165" y1="100" x2="165" y2="81" stroke="#00c48c" stroke-width="2" stroke-linecap="round">
-          <animateTransform attributeName="transform" type="rotate" from="0 165 100" to="-360 165 100" dur="12s" repeatCount="indefinite"/>
-        </line>
-        <text x="165" y="135" text-anchor="middle" font-family="DM Mono, monospace" font-size="8" fill="#888">KNOB 2</text>
-
-        <!-- Divider: INPUTS -->
-        <line x1="30" y1="155" x2="210" y2="155" stroke="#333" stroke-width="0.5"/>
-        <text x="120" y="170" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#555" letter-spacing="2">INPUTS</text>
-
-        <!-- Input jacks: A2, A3, CLK -->
-        <circle cx="55" cy="200" r="11" fill="#0e0e0e" stroke="#555" stroke-width="1"/>
-        <circle cx="55" cy="200" r="4" fill="#222"/>
-        <text x="55" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#999">A2 IN</text>
-
-        <circle cx="120" cy="200" r="11" fill="#0e0e0e" stroke="#555" stroke-width="1"/>
-        <circle cx="120" cy="200" r="4" fill="#222"/>
-        <text x="120" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#999">A3 IN</text>
-
-        <circle cx="185" cy="200" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
-        <circle cx="185" cy="200" r="4" fill="#222"/>
-        <text x="185" y="221" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">CLK IN</text>
-
-        <!-- Divider: OUTPUTS -->
-        <line x1="30" y1="240" x2="210" y2="240" stroke="#333" stroke-width="0.5"/>
-        <text x="120" y="255" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#555" letter-spacing="2">OUTPUTS</text>
-
-        <!-- Output jacks: DAC×2, D0, D1 -->
-        <circle cx="45" cy="285" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
-        <circle cx="45" cy="285" r="4" fill="#333"/>
-        <circle cx="95" cy="285" r="11" fill="#0e0e0e" stroke="#d97706" stroke-width="1.5"/>
-        <circle cx="95" cy="285" r="4" fill="#333"/>
-        <text x="70" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#d97706">DAC ×2</text>
-
-        <circle cx="150" cy="285" r="11" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
-        <circle cx="150" cy="285" r="4" fill="#333"/>
-        <text x="150" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D0</text>
-
-        <circle cx="195" cy="285" r="11" fill="#0e0e0e" stroke="#00c48c" stroke-width="1.5"/>
-        <circle cx="195" cy="285" r="4" fill="#333"/>
-        <text x="195" y="306" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="#00c48c">D1</text>
-
-        <!-- Waveform display -->
-        <rect x="35" y="325" width="170" height="46" rx="6" fill="#111" stroke="#222" stroke-width="1"/>
-        <polyline fill="none" stroke="#d97706" stroke-width="1.5" opacity="0.7"
-          points="40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342">
-          <animate attributeName="points" dur="3s" repeatCount="indefinite"
-            values="40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342;
-                    40,342 55,355 65,334 80,352 95,338 110,358 125,335 140,350 155,338 170,355 185,340 195,348;
-                    40,348 55,335 65,358 80,340 95,352 110,332 125,355 140,338 155,350 170,334 185,348 195,342"/>
-        </polyline>
-      </svg>
-    </div>
+    <div class="hero-module" id="heroPanel"></div>
   </div>
 
   <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat-item">
-      <div class="stat-number">153</div>
+      <div class="stat-number">166</div>
       <div class="stat-label">Sketches</div>
     </div>
     <div class="stat-item">
@@ -946,7 +1031,7 @@
       <div class="stat-label">Categories</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number">121<span>✓</span></div>
+      <div class="stat-number">135<span>✓</span></div>
       <div class="stat-label">Compile verified</div>
     </div>
     <div class="stat-item">
@@ -955,11 +1040,41 @@
     </div>
   </div>
 
+  <!-- HISTORY -->
+  <section id="history">
+    <div class="section-label">History</div>
+    <h2>It started in 5U</h2>
+    <div class="history-grid">
+      <div class="history-text">
+        <p>The ArdCore began as <strong>Darwin Grosse's</strong> final project for his master's degree. The pitch was simple: put an Arduino behind a synth panel, give it enough knobs and jacks to be useful, and let people write their own module in C. He released it under his 20 Objects name.</p>
+        <p>The first version was <strong>5U</strong>, for Moog-unit systems like the Synthesizers.com cabinets people call "dotcom". It was DIY in the full sense: you bought a PCB and wired the panel yourself. There was a 5U Output Expander too, which turned the eight DAC pins into eight gate outputs. The OX sketches in this repo still do exactly that.</p>
+        <p>Dan Snazelle at <strong>Snazzy FX</strong> then made the eurorack version. The 10HP module came out in 2012 and kept the controls from the 5U panel: two knobs, CV inputs on A2 and A3, a clock input, the DAC output, gates on D0 and D1, and a USB socket for uploading sketches. It sold out and was hard to get hold of for a couple of years after.</p>
+        <p>Darwin put his sketch library on GitHub the same year and kept adding to it, and other people started writing their own. Away from the ArdCore he worked at Cycling '74 and hosted the Art + Music + Technology podcast. He died in June 2022.</p>
+        <p>This repo gathers his library, the Snazzy FX sketches and community sets like Ascetic's in one place, and adds some new ones, including ports of VCV Rack modules.</p>
+      </div>
+      <figure class="history-photo">
+        <div class="history-pair">
+          <div>
+            <img src="ardcore_5u.jpg" alt="ArdCore 001, the original 5U module by 20 Objects" />
+            <span>ArdCore 001</span>
+          </div>
+          <div>
+            <img src="ardcore_5u-expander.jpg" alt="ArdCore Output Expander, 5U, by 20 Objects" />
+            <span>Output Expander</span>
+          </div>
+        </div>
+        <figcaption>The original 5U pair by 20 Objects.<br />Photos: ModularGrid (<a href="https://modulargrid.net/d/20objects-ardcore-001">ArdCore</a>, <a href="https://modulargrid.net/d/20objects-ardcore-output-expander">expander</a>)</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
   <!-- CATALOG -->
   <section id="catalog">
     <div class="section-label">Sketch Catalog</div>
-    <h2>Find the right sketch</h2>
-    <p class="section-sub">Browse all 153 sketches by category. Green dot = compiles, amber = needs work.</p>
+    <h2>The sketches</h2>
+    <p class="section-sub">All 166, sorted by what they do. A green dot means the sketch compiles. Amber means it doesn't yet.</p>
 
     <div class="search-box">
       <span class="search-icon">⌕</span>
@@ -976,8 +1091,8 @@
   <!-- HARDWARE -->
   <section id="hardware">
     <div class="section-label">Hardware Reference</div>
-    <h2>Know your module</h2>
-    <p class="section-sub">The ArdCore is an Arduino Nano in eurorack format. Here's what every jack and knob does.</p>
+    <h2>The panel</h2>
+    <p class="section-sub">Under the panel it's basically an Arduino. This is what each jack and knob is wired to.</p>
 
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:48px;">
       <div class="pinout-card" style="padding:24px;overflow:hidden;display:inline-block;">
@@ -988,37 +1103,37 @@
 
     <div class="porting-grid">
       <div class="porting-card" style="border-color:rgba(0,196,140,0.3);">
-        <div class="porting-platform" style="color:var(--green);">⬇ Inputs — what goes IN to the ArdCore</div>
+        <div class="porting-platform" style="color:var(--green);">Inputs</div>
         <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
           <div>
             <div class="step-title">Knob 1 &amp; Knob 2 <span style="font-size:11px;color:var(--muted);font-weight:400;">(top two knobs)</span></div>
-            <div class="step-body">Potentiometers read on A0 and A1. Each returns 0–1023. These are your primary controls — every sketch uses them for something different (speed, pitch, depth, etc).</div>
+            <div class="step-body">Read on A0 and A1 with <code>analogRead()</code>, 0 to 1023. Each sketch decides what they do: speed, pitch, depth and so on.</div>
           </div>
           <div>
             <div class="step-title">A2 &amp; A3 <span style="font-size:11px;color:var(--muted);font-weight:400;">(CV input jacks)</span></div>
-            <div class="step-body">Analog CV inputs, 0–5V → 0–1023. Patch CV from other modules here to voltage-control parameters. Often used for 1V/oct pitch, envelope CV, or modulation.</div>
+            <div class="step-body">CV inputs. 0 to 5V reads as 0 to 1023. Sketches use them for 1V/oct pitch, envelopes or any other modulation.</div>
           </div>
           <div>
             <div class="step-title">Clock In <span style="font-size:11px;color:var(--muted);font-weight:400;">(trigger/gate jack)</span></div>
-            <div class="step-body">Digital input on pin 2 with hardware interrupt. Patch a clock, trigger, or gate here. Rising edge fires an interrupt — sketches use this for tempo sync, envelope triggers, sequencer advance, etc.</div>
+            <div class="step-body">Pin 2, on a hardware interrupt. A rising edge fires the ISR, so clocks, triggers and gates all work. Sketches use it to sync tempo, fire envelopes and step sequencers.</div>
           </div>
         </div>
       </div>
 
       <div class="porting-card" style="border-color:rgba(217,119,6,0.3);">
-        <div class="porting-platform">⬆ Outputs — what comes OUT of the ArdCore</div>
+        <div class="porting-platform">Outputs</div>
         <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
           <div>
             <div class="step-title">DAC Out × 2 <span style="font-size:11px;color:var(--muted);font-weight:400;">(main output jacks)</span></div>
-            <div class="step-body"><strong>These are your main CV / audio outputs.</strong> Two buffered copies of the same signal — a built-in mult so you can send the same voltage to two destinations without a separate mult module. The 8-bit R-2R ladder DAC is built from digital pins 5–12, giving 256 voltage steps across 0–5V. Patch to a VCA, VCO pitch, filter cutoff, mixer — whatever you want the sketch to control.</div>
+            <div class="step-body">The main output, for CV or audio. The two jacks carry the same signal, so you get a free mult. The DAC is an 8-bit R-2R ladder on digital pins 5 to 12, which gives 256 steps between 0 and 5V.</div>
           </div>
           <div>
             <div class="step-title">D0 &amp; D1 <span style="font-size:11px;color:var(--muted);font-weight:400;">(digital output jacks)</span></div>
-            <div class="step-body">Two digital gate/trigger outputs on pins 3 &amp; 4. These are on/off only (0V or 5V) — no CV, just gates. Sketches use them for clock outputs, end-of-cycle triggers, gate-high indicators, rhythm outputs, etc.</div>
+            <div class="step-body">Pins 3 and 4. They're either 0V or 5V, so use them for gates and triggers: clock out, end of cycle, rhythms.</div>
           </div>
           <div style="background:#111;border:1px solid var(--border);border-radius:10px;padding:16px;">
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">💡 Output Expander mode</div>
-            <div style="font-size:13px;color:var(--muted);line-height:1.6;">With the optional expander board, the same 8 DAC pins become 8 individual gate outputs instead of one analog voltage. You get either the DAC <em>or</em> 8 gates — not both at once. Expander sketches are prefixed OX.</div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">Output Expander</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.6;">The expander reads the eight DAC pins as eight separate gates. You get one or the other, the DAC voltage or the eight gates, because they share the same pins. Expander sketches start with OX.</div>
           </div>
         </div>
       </div>
@@ -1031,48 +1146,40 @@
   <section id="techniques">
     <div class="section-label">DSP Techniques</div>
     <h2>Integer math on 8-bit hardware</h2>
-    <p class="section-sub">No floating point. No FPU. Everything is integer arithmetic on a 16MHz ATmega328P with 2KB of RAM. Here's how.</p>
+    <p class="section-sub">The ATmega328P runs at 16MHz, has 2KB of RAM and no FPU. Floats work but they're slow, so most sketches stick to integers. These are the tricks that keep coming up.</p>
 
     <div class="technique-grid">
       <div class="technique-card">
-        <div class="feature-icon">🔢</div>
         <div class="technique-title">Fixed-point scaling</div>
-        <div class="technique-body">Multiply by integer, divide by power-of-2. Example: 0.7× becomes <code>(long)val * 718L / 1024L</code>. The compiler turns /1024 into a bit shift.</div>
+        <div class="technique-body">Multiply by an integer, then divide by a power of two. To scale by 0.7, write <code>(long)val * 718L / 1024L</code>. The compiler turns the divide into a shift.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">📐</div>
         <div class="technique-title">Wavetable lookup</div>
-        <div class="technique-body">Store one cycle in PROGMEM as a 256-byte array. Phase accumulator indexes into the table. DDS gives you sub-Hz to audio-rate oscillators in a few lines.</div>
+        <div class="technique-body">Keep one cycle of the wave in PROGMEM as 256 bytes and step through it with a phase accumulator. The same few lines cover everything from slow LFOs to audio rate.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">⚡</div>
         <div class="technique-title">Direct port writes</div>
-        <div class="technique-body">Skip <code>digitalWrite()</code> — write PORTB/PORTD directly for the 8-bit DAC. 4× faster. Essential for audio-rate output.</div>
+        <div class="technique-body"><code>digitalWrite()</code> sets one pin at a time and is slow. Writing PORTB and PORTD directly sets all eight DAC bits in a couple of writes, which you need at audio rate.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">🎲</div>
         <div class="technique-title">LFSR noise</div>
-        <div class="technique-body">Linear feedback shift register: XOR tapped bits, shift, repeat. A 16-bit LFSR gives 65535 unique values before cycling. One byte of state.</div>
+        <div class="technique-body">XOR a few tapped bits, shift, repeat. A 16-bit LFSR runs through 65535 values before it repeats, and the whole state fits in one <code>unsigned int</code>.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">🧮</div>
         <div class="technique-title">Overflow arithmetic</div>
-        <div class="technique-body">Use <code>(long)a * b</code> to avoid 16-bit overflow in intermediate results. Cast back to int after dividing. Critical for any multiplication of 10-bit values.</div>
+        <div class="technique-body">Two 10-bit readings multiplied together overflow an <code>int</code>. Cast one side to <code>long</code> first, then divide and cast back.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">📈</div>
         <div class="technique-title">Envelope state machines</div>
-        <div class="technique-body">Attack/decay/release as integer ramps. Increment by rate each loop. State variable tracks which phase is active. Output to DAC for amplitude control.</div>
+        <div class="technique-body">Attack, decay and release are integer ramps. Add the rate each pass through <code>loop()</code>, keep a variable for the current stage, and write the level to the DAC.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">🔗</div>
         <div class="technique-title">Clock interrupts</div>
-        <div class="technique-body">Attach interrupt to pin 2 (rising edge). Set a flag in the ISR, check it in <code>loop()</code>. Never do analogRead or DAC writes inside the ISR.</div>
+        <div class="technique-body">Attach an interrupt to pin 2 on the rising edge. The ISR only sets a flag; <code>loop()</code> checks it. Keep <code>analogRead()</code> and DAC writes out of the ISR.</div>
       </div>
       <div class="technique-card">
-        <div class="feature-icon">🧬</div>
         <div class="technique-title">Chaotic maps</div>
-        <div class="technique-body">Logistic map, shift registers with nonlinear feedback, neuron models — all work beautifully in integer math. Small state, complex behavior.</div>
+        <div class="technique-body">Logistic maps, shift registers with nonlinear feedback, neuron models. They need very little state and they're fine in integer math.</div>
       </div>
     </div>
   </section>
@@ -1083,29 +1190,29 @@
   <section id="porting">
     <div class="section-label">VCV Rack → ArdCore</div>
     <h2>Port your favorite modules</h2>
-    <p class="section-sub">We've ported SquidAxon, Genie, Rungler, and AlgoVCO from VCV Rack. Here's the workflow for porting your own.</p>
+    <p class="section-sub">SquidAxon, Genie, Rungler and AlgoVCO came over from VCV Rack this way. Here are the steps if you want to try one.</p>
 
     <div class="porting-grid">
       <div class="porting-card">
         <div class="porting-platform">Step 1</div>
         <div class="porting-title">Map I/O</div>
-        <div class="porting-sub">VCV modules have unlimited knobs and jacks. ArdCore has 2 knobs + 2 CV in + 1 clock + 1 DAC + 2 digital out. Decide what maps where. Self-exciting modules (chaos, oscillators) are easiest — they need fewer inputs.</div>
+        <div class="porting-sub">A VCV module can have as many knobs and jacks as it likes. The ArdCore has two knobs, two CV ins, a clock in, the DAC and two gate outs, so decide what goes where first. Chaos generators and oscillators are the easiest to port because they don't need many inputs.</div>
       </div>
       <div class="porting-card">
         <div class="porting-platform">Step 2</div>
         <div class="porting-title">Kill the floats</div>
-        <div class="porting-sub">Replace all float math with integer equivalents. 0.0–1.0 becomes 0–1023. Multiply-then-divide instead of fractional coefficients. Cast to <code>long</code> for intermediate products.</div>
+        <div class="porting-sub">Swap floats for integers. A 0.0 to 1.0 range becomes 0 to 1023, fractions become multiply-then-divide, and anything that might overflow gets cast to <code>long</code>.</div>
         <div class="porting-code">(long)val * 718L / 1024L  // ≈ val × 0.7</div>
       </div>
       <div class="porting-card">
         <div class="porting-platform">Step 3</div>
         <div class="porting-title">Watch the RAM</div>
-        <div class="porting-sub">2KB total. Arduino runtime takes ~500 bytes. Avoid arrays over 256 elements. Use PROGMEM for lookup tables. One wavetable = 256 bytes = 12.5% of your RAM if not in flash.</div>
+        <div class="porting-sub">You have 2KB and the Arduino core uses about 500 bytes of it. Put lookup tables in PROGMEM: a 256-byte wavetable left in RAM takes an eighth of it.</div>
       </div>
       <div class="porting-card">
         <div class="porting-platform">Step 4</div>
         <div class="porting-title">Document everything</div>
-        <div class="porting-sub">Add I/O Usage header, algorithm explanation, ASCII diagrams in comments. Future you (and others) will thank you. Use the porting template in <code>templates/</code>.</div>
+        <div class="porting-sub">Put an I/O header at the top, say how the algorithm works, and draw an ASCII diagram if it helps. The template in <code>templates/</code> has the layout.</div>
         <div class="porting-code">cp templates/VCV_PORT_TEMPLATE.ino my_port/</div>
       </div>
     </div>
@@ -1116,22 +1223,22 @@
   <!-- SETUP -->
   <section id="setup">
     <div class="section-label">macOS Setup</div>
-    <h2>Get compiling in 5 minutes</h2>
-    <p class="section-sub">Everything you need to compile and upload ArdCore sketches on a Mac — from zero to blinking LED.</p>
+    <h2>Compiling on a Mac</h2>
+    <p class="section-sub">How to build sketches and get them onto the module with <code>arduino-cli</code>.</p>
 
     <div class="setup-grid">
 
       <!-- Step 1: Homebrew + arduino-cli -->
       <div class="setup-card">
-        <div class="setup-step-label">Step 1 — Install the toolchain</div>
+        <div class="setup-step-label">Step 1: install the toolchain</div>
         <div class="setup-title">Homebrew + arduino-cli</div>
-        <div class="setup-sub">If you don't have Homebrew yet, install it first. Then grab <code>arduino-cli</code> — the official Arduino command-line tool that handles cores, libraries, and compilation.</div>
+        <div class="setup-sub">Install Homebrew if you don't have it, then <code>arduino-cli</code>, Arduino's own command-line tool.</div>
         <div class="setup-terminal">
           <div class="setup-terminal-bar">
             <div class="setup-terminal-dot red"></div>
             <div class="setup-terminal-dot yellow"></div>
             <div class="setup-terminal-dot green"></div>
-            <span class="setup-terminal-title">Terminal — Install</span>
+            <span class="setup-terminal-title">Install</span>
           </div>
           <pre><span class="comment"># Install Homebrew (skip if you already have it)</span>
 <span class="prompt">$</span> <span class="cmd">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</span>
@@ -1142,20 +1249,20 @@
 <span class="comment"># Install the AVR core (ATmega328P lives here)</span>
 <span class="prompt">$</span> <span class="cmd">arduino-cli core install arduino:avr</span></pre>
         </div>
-        <div class="setup-note">💡 This downloads ~150MB of AVR compiler toolchain + header files.</div>
+        <div class="setup-note">The AVR core is about 150MB.</div>
       </div>
 
       <!-- Step 2: Clone + verify -->
       <div class="setup-card">
-        <div class="setup-step-label">Step 2 — Clone &amp; verify</div>
-        <div class="setup-title">Get the repo and test compilation</div>
-        <div class="setup-sub">Clone this collection and run the batch verify script to make sure everything compiles. The script tests all <code>.ino</code> files against the Arduino Nano target board.</div>
+        <div class="setup-step-label">Step 2: clone and check</div>
+        <div class="setup-title">Clone the repo and compile everything</div>
+        <div class="setup-sub"><code>verify-all.sh</code> compiles every sketch for the Arduino Nano and skips anything listed in <code>scripts/verify-ignore.txt</code>.</div>
         <div class="setup-terminal">
           <div class="setup-terminal-bar">
             <div class="setup-terminal-dot red"></div>
             <div class="setup-terminal-dot yellow"></div>
             <div class="setup-terminal-dot green"></div>
-            <span class="setup-terminal-title">Terminal — Verify</span>
+            <span class="setup-terminal-title">Verify</span>
           </div>
           <pre><span class="comment"># Clone the repo</span>
 <span class="prompt">$</span> <span class="cmd">git clone https://github.com/mamonu/ard_glow.git</span>
@@ -1164,32 +1271,33 @@
 <span class="comment"># Run the batch compile check</span>
 <span class="prompt">$</span> <span class="cmd">./scripts/verify-all.sh</span>
 
-<span class="output">Verifying 153 sketches against arduino:avr:nano …
-  ✅ PASS  official/AC01_ButterflyMidi/AC01_ButterflyMidi.ino
-  ✅ PASS  official/AC02_ADSREnvGen/AC02_ADSREnvGen.ino
+<span class="output">  ArdCore Sketch Compiler — board: arduino:avr:nano
+
+  PASS  official/AC01_Template/AC01_Template.ino
+  PASS  official/AC02_Quantizer/AC02_Quantizer.ino
   …
-  ⚠️ SKIP  snazzy_fx/Auduino_SYNTH_ARDCORE_MODS/Auduino2b.pde
-━━━━━━━━━━━━━━━━━━━━━━
-  PASS: 121  FAIL: 0  SKIP: 31</span></pre>
+  SKIP  community/asct/ASCTard005_LFO/ASCTard005_LFO.ino
+
+  Results: 135 passed, 0 failed, 15 skipped</span></pre>
         </div>
-        <div class="setup-note">💡 Use <code>--verbose</code> to see full compiler output for failures.</div>
+        <div class="setup-note">Add <code>--verbose</code> to see the compiler errors for anything that fails.</div>
       </div>
 
       <!-- Step 3: Compile a single sketch -->
       <div class="setup-card">
-        <div class="setup-step-label">Step 3 — Compile a single sketch</div>
-        <div class="setup-title">Build &amp; upload to your ArdCore</div>
-        <div class="setup-sub">Pick any sketch and compile it. To upload, connect the ArdCore via USB (it's an Arduino Nano under the hood) and add the <code>-u</code> flag with the serial port.</div>
+        <div class="setup-step-label">Step 3: build and upload one sketch</div>
+        <div class="setup-title">Upload to the ArdCore</div>
+        <div class="setup-sub">Plug the ArdCore in over USB, find its port, and add <code>-u -p</code> to the compile command.</div>
         <div class="setup-terminal">
           <div class="setup-terminal-bar">
             <div class="setup-terminal-dot red"></div>
             <div class="setup-terminal-dot yellow"></div>
             <div class="setup-terminal-dot green"></div>
-            <span class="setup-terminal-title">Terminal — Compile &amp; Upload</span>
+            <span class="setup-terminal-title">Compile and upload</span>
           </div>
           <pre><span class="comment"># Compile only (no hardware needed)</span>
 <span class="prompt">$</span> <span class="cmd">arduino-cli compile --fqbn arduino:avr:nano \
-    official/AC07_StepSequencer/AC07_StepSequencer.ino</span>
+    official/AC07_Sequencer/AC07_Sequencer.ino</span>
 
 <span class="output">Sketch uses 3,842 bytes (12%) of program storage space.
 Global variables use 134 bytes (6%) of dynamic memory.</span>
@@ -1203,29 +1311,29 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
 <span class="comment"># Compile + upload (ATmega328P with old bootloader)</span>
 <span class="prompt">$</span> <span class="cmd">arduino-cli compile -u -p /dev/cu.usbserial-1420 \
     --fqbn arduino:avr:nano:cpu=atmega328old \
-    official/AC07_StepSequencer/AC07_StepSequencer.ino</span></pre>
+    official/AC07_Sequencer/AC07_Sequencer.ino</span></pre>
         </div>
-        <div class="setup-note">⚠️ Most ArdCores ship with the <strong>old bootloader</strong> — use <code>cpu=atmega328old</code>. If upload fails, try without it.</div>
+        <div class="setup-note">Most ArdCores have the <strong>old bootloader</strong>, hence <code>cpu=atmega328old</code>. If the upload fails, try it without.</div>
       </div>
 
       <!-- Step 4: Arduino IDE (optional) -->
       <div class="setup-card">
-        <div class="setup-step-label">Alternative — Arduino IDE</div>
-        <div class="setup-title">Prefer a GUI?</div>
-        <div class="setup-sub">You can also use the Arduino IDE. Set Board to <strong>Arduino Nano</strong>, Processor to <strong>ATmega328P (Old Bootloader)</strong>, and open any <code>.ino</code> file directly.</div>
+        <div class="setup-step-label">Or use the Arduino IDE</div>
+        <div class="setup-title">Arduino IDE</div>
+        <div class="setup-sub">Set the board to <strong>Arduino Nano</strong> and the processor to <strong>ATmega328P (Old Bootloader)</strong>, then open the <code>.ino</code> file.</div>
         <div class="setup-terminal">
           <div class="setup-terminal-bar">
             <div class="setup-terminal-dot red"></div>
             <div class="setup-terminal-dot yellow"></div>
             <div class="setup-terminal-dot green"></div>
-            <span class="setup-terminal-title">Terminal — Install IDE (optional)</span>
+            <span class="setup-terminal-title">Install the IDE (optional)</span>
           </div>
           <pre><span class="comment"># Install Arduino IDE via Homebrew Cask</span>
 <span class="prompt">$</span> <span class="cmd">brew install --cask arduino-ide</span>
 
 <span class="comment"># Or download from https://www.arduino.cc/en/software</span></pre>
         </div>
-        <div class="setup-note">💡 The CLI is faster for batch work; the IDE is nicer for editing and serial monitoring.</div>
+        <div class="setup-note">The CLI is quicker for building lots of sketches. The IDE is easier for editing and watching the serial monitor.</div>
       </div>
 
     </div>
@@ -1236,28 +1344,28 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
   <!-- ROADMAP -->
   <section id="roadmap">
     <div class="section-label">Project Status</div>
-    <h2>What's been done &amp; what's next</h2>
-    <p class="section-sub">This collection is actively maintained. Here's the current state.</p>
+    <h2>Done and to do</h2>
+    <p class="section-sub">Where things stand.</p>
 
     <div class="roadmap-list">
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">153 sketches collected from 4 sources into unified repo</div>
+        <div class="roadmap-text">166 sketches from four sources in one repo</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">Functional catalog with 15 categories and compile status</div>
+        <div class="roadmap-text">Catalog in 15 categories, with compile status</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">Local compile verification script (arduino-cli)</div>
+        <div class="roadmap-text">Compile check script using arduino-cli</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">VCV Rack → ArdCore porting template with checklist</div>
+        <div class="roadmap-text">Template and checklist for porting VCV Rack modules</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
@@ -1267,17 +1375,17 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot done"></div>
-        <div class="roadmap-text">GitHub Pages site with searchable catalog</div>
+        <div class="roadmap-text">This site, with a searchable catalog</div>
         <span class="roadmap-tag done">Done</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot next"></div>
-        <div class="roadmap-text">GitHub Actions CI for compile verification</div>
+        <div class="roadmap-text">Compile check on GitHub Actions</div>
         <span class="roadmap-tag next">Up next</span>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-dot soon"></div>
-        <div class="roadmap-text">Fix 32 non-compiling sketches</div>
+        <div class="roadmap-text">Fix 31 non-compiling sketches</div>
         <span class="roadmap-tag soon">Planned</span>
       </div>
       <div class="roadmap-item">
@@ -1296,63 +1404,77 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       <li><a href="https://github.com/darwingrosse/ArdCore-Code">Original ArdCore Code</a></li>
       <li><a href="http://snazzyfx.com/">SnazzyFX</a></li>
     </ul>
-    <div class="footer-copy">Open source · ATmega328P forever</div>
+    <div class="footer-copy">Open source</div>
   </footer>
+
+  <script src="ardcore-panel.js"></script>
+  <script>ArdCore.panel(document.getElementById('heroPanel'));</script>
+  <script src="sketch-controls.js"></script>
 
   <script>
     // ── SKETCH DATA ──
     const sketches = [
       // Envelopes
-      {n:"AC25 — VC AR Envelope",d:"Attack/release with VC timing, EOC trigger on D1",c:"Envelopes",p:"official/AC25_VCAREnvelope/",s:1},
-      {n:"AC29 — VC AD Loop Envelope",d:"Attack/decay with loop-on-trigger, gate outputs",c:"Envelopes",p:"official/AC29_VCADLoopEnvelope/",s:1},
-      {n:"AC32 — Bouncing Ball",d:"Physics-based bouncing ball envelope, trigger on bounce",c:"Envelopes",p:"official/AC32_BouncingBall/",s:1},
-      {n:"AC34 — Looping VC Envelope",d:"Free-running AR envelope with VC timing and EOC",c:"Envelopes",p:"community/user_submitted/AC34_LoopingVCEnvelope/",s:1},
-      {n:"ADSR_ENV",d:"Experimental ADSR envelope with controllable stages",c:"Envelopes",p:"snazzy_fx/ADSR_envelope/ADSR_ENV/",s:1},
+      {n:"AC25 — VC AR Envelope",d:"Attack/decay envelope with VC times, triggers at the peak and the end",c:"Envelopes",p:"official/AC25_VCAREnvelope/",s:1},
+      {n:"AC29 — VC AD Loop Envelope",d:"One-shot attack/decay, gate high on D0 while running and on D1 while idle",c:"Envelopes",p:"official/AC29_VCADLoopEnvelope/",s:1},
+      {n:"AC32 — Bouncing Ball",d:"A bouncing ball: triggers that speed up and a DAC that steps down",c:"Envelopes",p:"official/AC32_BouncingBall/",s:1},
+      {n:"AC34 — Looping VC Envelope",d:"Free-running attack/release with CV times, triggers at the peak and the end",c:"Envelopes",p:"community/user_submitted/AC34_LoopingVCEnvelope/",s:1},
+      {n:"ADSR_ENV",d:"Gated envelope with attack, decay and release, sustain fixed near zero",c:"Envelopes",p:"snazzy_fx/ADSR_envelope/ADSR_ENV/",s:1},
       // Sequencers
       {n:"AC07 — Sequencer",d:"Basic 8-step sequencer with knob-based recording",c:"Sequencers",p:"official/AC07_Sequencer/",s:1},
       {n:"AC10 — Note Delay",d:"Delay incoming notes by user-selected time",c:"Sequencers",p:"official/AC10_NoteDelay/",s:0},
-      {n:"AC14 — Gate Sequence",d:"Gate sequence output via 8-bit DAC (8 gate channels)",c:"Sequencers",p:"official/AC14_GateSequence/",s:1},
+      {n:"AC14 — Gate Sequence",d:"Eight fixed 16-step gate patterns, made for the output expander",c:"Sequencers",p:"official/AC14_GateSequence/",s:1},
       {n:"AC27 — 101 SEQ",d:"SH-101 style voltage recorder, 64 steps",c:"Sequencers",p:"official/AC27_101SEQ/",s:1},
       {n:"AC30 — Dual Euclidean",d:"Dual Euclidean rhythm generator",c:"Sequencers",p:"official/AC30_DualEuclidean/",s:1},
       {n:"ASCTard001 — Analytic Geometry",d:"Records/plays CV from 8×8 grid coordinates",c:"Sequencers",p:"community/asct/ASCTard001_Analytic_Geometry/",s:1},
       {n:"ASCTard009 — Phase Patterns",d:"Steve Reich-inspired phase pattern sequencer",c:"Sequencers",p:"community/asct/ASCTard009_Phase_patterns/",s:0},
-      {n:"ACDAN1 — Depth Charge",d:"Random depth charge pattern generator",c:"Sequencers",p:"snazzy_fx/dans_trashy_mods/ACDAN1_DepthCharge/",s:1},
+      {n:"ACDAN1 — Depth Charge",d:"Free-running random noise and folded CV, no clock",c:"Noise",p:"snazzy_fx/dans_trashy_mods/ACDAN1_DepthCharge/",s:1},
       {n:"mem_check_",d:"Voltage recorder/sampler with playback",c:"Sequencers",p:"snazzy_fx/dans_trashy_mods/mem_check_/",s:1},
       {n:"LFSR_SEQUENCER",d:"LFSR-based sequencer with noise/pattern output",c:"Sequencers",p:"snazzy_fx/LFSR/LFSR_SEQUENCER/",s:1},
       {n:"64-stage Shift Register",d:"64-stage shift register with transpose control",c:"Sequencers",p:"snazzy_fx/shift_register_64/",s:1},
       // Oscillators
-      {n:"AC24 — Simple VCO",d:"Direct pin manipulation VCO with 1V/oct CV input",c:"Oscillators",p:"official/AC24_SimpleVCO/",s:1},
+      {n:"AC24 — Simple VCO",d:"Rough square-wave VCO, about 25 semitones per volt",c:"Oscillators",p:"official/AC24_SimpleVCO/",s:1},
       {n:"AC33 — Screecher WT",d:"7-waveform wavetable VCO with 1V/oct",c:"Oscillators",p:"community/user_submitted/AC33_SSQScreecherWT/",s:1},
       {n:"AC38 — Algo VCO",d:"16 algorithmic waveforms, zero wavetable memory, 3 VC-modifiable",c:"Oscillators",p:"community/user_submitted/AC38_AlgoVCO/",s:1},
       {n:"Auduino v5",d:"Granular synthesis with dual grain control",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/",s:1},
       {n:"ARDCORE_TRIANGLE",d:"Triangle wave VCO with CV control",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_TRIANGLE/",s:1},
       {n:"SIMPLEST_SAWTOOTH",d:"Basic sawtooth wave generator",c:"Oscillators",p:"snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH/",s:1},
-      {n:"sine",d:"Sine wave generator using lookup table",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/sine/",s:1},
-      {n:"frequot2",d:"Modified frequency generator",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot2/",s:1},
+      {n:"sine",d:"Clocked random voltage, despite the name",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/sine/",s:1},
+      {n:"frequot2",d:"Self-playing rising scale of square-wave notes",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot2/",s:1},
       {n:"fac_fm_osc",d:"FM synthesizer with modulator/carrier (.pde)",c:"Oscillators",p:"snazzy_fx/fac_fm_osc/",s:0},
-      {n:"ARDCORE_twotone_mod",d:"Two-tone drone synthesizer",c:"Oscillators",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod/",s:0},
-      {n:"noiseBrother",d:"Sawtooth oscillator generator",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/noiseBrother/",s:1},
+      {n:"fac_fm_osc_fixed",d:"FM voice, 1V/oct, fixed 2026 copy of fac_fm_osc",c:"Oscillators",p:"snazzy_fx/fac_fm_osc_fixed/",s:1},
+      {n:"ARDCORE_twotone_mod",d:"Two-tone drone synthesizer (too big for the RAM)",c:"Oscillators",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod/",s:0},
+      {n:"ARDCORE_twotone_mod_fixed",d:"Crossfading two-tone drone, fixed 2026 copy that fits",c:"Oscillators",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/ARDCORE_twotone_mod_fixed/",s:1},
+      {n:"noiseBrother",d:"Buzzy folded sawtooth, identical to SIMPLEST_SAWTOOTH_mod",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/noiseBrother/",s:1},
+      {n:"Auduino MOD1",d:"Auduino with scale modes, needs the input expander",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/ARDCORE_AUDUINO_MODS/ARDCORE_AUDUINO_MOD1/",s:1},
+      {n:"Auduino v5a",d:"Auduino with grain 2 pitch on A1 and folding clip",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/Auduino_SYNTH_ARDCORE_MODS/ARDCORE_auduino_v5a/",s:1},
+      {n:"Auduino v5ab",d:"Rough, glitchy Auduino port with smooth pitch",c:"Oscillators",p:"snazzy_fx/ARDCORE_auduino_v5/Auduino_SYNTH_ARDCORE_MODS/ARDCORE_auduino_v5ab/",s:1},
+      {n:"SIMPLEST_SAWTOOTH_mod",d:"Buzzy folded sawtooth, A2 changes the tone",c:"Oscillators",p:"snazzy_fx/dans_trashy_mods/SIMPLEST_SAWTOOTH_mod/",s:1},
+      {n:"freqout_ardcore",d:"Self-playing rising scale with a four-step wave",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/freqout_ardcore.ino",s:0},
+      {n:"frequot",d:"Paul Badger's original freqout demo, not adapted (.pde)",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/FREQUOT/frequot/",s:0},
+      {n:"AC_Sinetests",d:"DDS sine test, file is broken (.pde)",c:"Oscillators",p:"snazzy_fx/dans_trashy_mods/AC_Sinetests_pde/",s:0},
+      {n:"chiptune",d:"Four-voice chiptune song player (.pde)",c:"Oscillators",p:"snazzy_fx/EXPERIMENTAL_AUDIO/chiptune.pde",s:0},
       // LFOs
-      {n:"AC19 — Shaped LFO",d:"Wave-shaped LFO with speed and warp controls",c:"LFOs",p:"official/AC19_ShapedLFO/",s:1},
+      {n:"AC19 — Shaped LFO",d:"Triangle LFO that warps into a ramp either way, triggers at top and bottom",c:"LFOs",p:"official/AC19_ShapedLFO/",s:1},
       {n:"VC_LFO",d:"Triangle-wave LFO with waveshaping",c:"LFOs",p:"community/user_submitted/VC_LFO/",s:1},
       {n:"ASCTard005 — LFO",d:"Experimental LFO with selectable waveforms",c:"LFOs",p:"community/asct/ASCTard005_LFO/",s:0},
       {n:"ARD_SINE_LFO",d:"Sine wave LFO with speed control",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO/",s:1},
       {n:"ARD_SINE_LFO_smoother_rng",d:"Sine LFO with smoothing and range control",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/ARD_SINE_LFO_smoother_rng/",s:1},
-      {n:"LFO_w_slow_CPU",d:"Triangle LFO, optimized for low CPU usage",c:"LFOs",p:"snazzy_fx/CV-LFO_SKETCHES/LFO_w_slow_CPU/",s:1},
-      {n:"fac_triple_lfo",d:"Three independent LFOs with reset (.pde)",c:"LFOs",p:"snazzy_fx/fac_triple_lfo.pde/",s:0},
+      {n:"LFO_w_slow_CPU",d:"Audio-rate rising sawtooth, despite the name",c:"Oscillators",p:"snazzy_fx/CV-LFO_SKETCHES/LFO_w_slow_CPU/",s:1},
+      {n:"fac_triple_lfo",d:"Three LFOs at once on the DAC, D0 and D1, with reset",c:"LFOs",p:"snazzy_fx/fac_triple_lfo/",s:1},
       // Chaos / Generative
       {n:"AC03 — Drunken Walk",d:"Random walk at full 8-bit resolution",c:"Chaos",p:"official/AC03_DrunkenWalk/",s:1},
       {n:"AC04 — Drunken Note",d:"Random walk quantized to note resolution",c:"Chaos",p:"official/AC04_DrunkenNote/",s:1},
-      {n:"AC18 — Variation Generator",d:"Step through 2D variation pattern",c:"Chaos",p:"official/AC18_VariationGenerator/",s:1},
+      {n:"AC18 — Variation Generator",d:"Ten fixed gate patterns you can shift in time and across outputs",c:"Chaos",p:"official/AC18_VariationGenerator/",s:1},
       {n:"AC20 — Depth Random",d:"Random output limited to user-selected bit depth",c:"Chaos",p:"official/AC20_DepthRandom/",s:1},
       {n:"AC21 — Shift Register",d:"Record 8 values, shift register with offset/transpose",c:"Chaos",p:"official/AC21_ShiftRegister/",s:1},
       {n:"AC35 — SquidAxon",d:"NLC SquidAxon port: 4-stage chaotic shift register",c:"Chaos",p:"community/user_submitted/AC35_SquidAxon/",s:1},
       {n:"AC36 — Genie",d:"NLC Genie port: 3-neuron ring oscillator",c:"Chaos",p:"community/user_submitted/AC36_Genie/",s:1},
       {n:"AC37 — Rungler",d:"HetrickCV Rungler port: 8-bit boolean shift register",c:"Chaos",p:"community/user_submitted/AC37_Rungler/",s:1},
       {n:"ASCTard008 — Changnesia",d:"Outputs trigger on CV input changes",c:"Chaos",p:"community/asct/ASCTard008_Changnesia/",s:1},
-      {n:"LFSR",d:"Galois LFSR for noise/CV pattern generation",c:"Chaos",p:"snazzy_fx/LFSR/LFSR/",s:1},
-      {n:"LFSR2",d:"LFSR variant for pattern generation",c:"Chaos",p:"snazzy_fx/LFSR/LFSR2/",s:1},
-      {n:"LFSR32",d:"32-bit LFSR pattern generator",c:"Chaos",p:"snazzy_fx/LFSR/LFSR32/",s:1},
+      {n:"LFSR",d:"16-bit shift register noise, no controls",c:"Noise",p:"snazzy_fx/LFSR/LFSR/",s:1},
+      {n:"LFSR2",d:"16-bit Galois shift register noise, no controls",c:"Noise",p:"snazzy_fx/LFSR/LFSR2/",s:1},
+      {n:"LFSR32",d:"32-bit shift register noise, no controls",c:"Noise",p:"snazzy_fx/LFSR/LFSR32/",s:1},
       {n:"CELLULAR_AUTOMATA_SYNTH",d:"1D cellular automata rule-based synth",c:"Chaos",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/CELLULAR_AUTOMATA_SYNTH/",s:1},
       {n:"fraktal_synth",d:"Fractal algorithm synthesizer, two modes",c:"Chaos",p:"snazzy_fx/FRAKTAL_SYNTH_PORTS/fraktal_synth/",s:1},
       // Clock / Logic
@@ -1362,8 +1484,10 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       {n:"AC16 — Trig Multiplier",d:"Multiply incoming clock triggers",c:"Clock/Logic",p:"official/AC16_TrigMultiplier/",s:1},
       {n:"AC17 — Logic Module",d:"AND, OR, XOR logic on two inputs",c:"Clock/Logic",p:"official/AC17_LogicModule/",s:1},
       {n:"OX01 — Master Clock",d:"Master clock with variable division and trigger time",c:"Clock/Logic",p:"official/OX01_MasterClock/",s:1},
-      {n:"OX04 — 8-Way Divider",d:"Divide clock 1 through 8 ways simultaneously",c:"Clock/Logic",p:"official/OX04_8WayDivider/",s:0},
-      {n:"ASCTard004 — Gate Counter",d:"Counts clock pulses, creates toggles",c:"Clock/Logic",p:"community/asct/ASCTard004_Gate_Counter/",s:1},
+      {n:"OX04 — 8-Way Divider",d:"Unfinished 8-way divider, doesn't compile",c:"Clock/Logic",p:"official/OX04_8WayDivider/",s:0},
+      {n:"OX04 — 8-Way Divider (fixed)",d:"Divide by 1 to 8 on the expander, finished 2026",c:"Clock/Logic",p:"official/OX04_8WayDivider_fixed/",s:1},
+      {n:"ASCTard004 — Gate Counter",d:"Counter and toggle; counting is broken, works only at zero",c:"Clock/Logic",p:"community/asct/ASCTard004_Gate_Counter/",s:1},
+      {n:"ASCTard004 — Gate Counter (fixed)",d:"Counter and toggle, every 1 to 64 clocks, fixed 2026 copy",c:"Clock/Logic",p:"community/asct/ASCTard004_Gate_Counter_fixed/",s:1},
       {n:"ASCTard006 — Burst Generator",d:"Generates bursts of clock pulses",c:"Clock/Logic",p:"community/asct/ASCTard006_Burst_gen_ino/",s:1},
       {n:"ASCTard010 — Tapped Out",d:"Pattern/clock module with presets",c:"Clock/Logic",p:"community/asct/ASCTard010_Tapped_Out/",s:1},
       // CV Utilities
@@ -1373,53 +1497,81 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       {n:"AC09 — Trigger Delay",d:"Delay trigger outputs by user-set amount",c:"CV Utilities",p:"official/AC09_TriggerDelay/",s:1},
       {n:"AC11 — Glissando",d:"Stepped glissando generator with destination trigger",c:"CV Utilities",p:"official/AC11_Glissando/",s:1},
       {n:"AC15 — Auto Switch",d:"Switch analog inputs to output based on clock",c:"CV Utilities",p:"official/AC15_AutoSwitch/",s:1},
-      {n:"AC22 — Standards",d:"Produce 1V/oct and stepped reference outputs",c:"CV Utilities",p:"official/AC22_Standards/",s:1},
+      {n:"AC22 — Standards",d:"Fixed octave and note voltages, about 6% short of 1V/oct",c:"CV Utilities",p:"official/AC22_Standards/",s:1},
       {n:"AC23 — Voltage Recorder",d:"Record and playback loop of CV values",c:"CV Utilities",p:"official/AC23_VoltageRecorder/",s:1},
       {n:"ASCTard002 — CV Scaler",d:"Scales CV between min/max set by knobs",c:"CV Utilities",p:"community/asct/ASCTard002_CV_Scaler/",s:1},
-      {n:"ASCTard007 — Rat S&H",d:"Sample-and-hold with ratchet patterns",c:"CV Utilities",p:"community/asct/ASCTard007_Rat_s_h___t/",s:1},
-      {n:"harmonize",d:"Note harmonizer, transforms CV to harmonic output",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/harmonize_NOTES_CV/",s:0},
-      {n:"nscale_CV_best",d:"Note scale quantizer with transpose and timing",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/",s:0},
-      {n:"uffq_quantizer",d:"Voltage-to-note quantizer",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/uffq_quantizer/",s:0},
+      {n:"ASCTard007 — Rat S&H",d:"Divides a clock by number series, with random voltage",c:"CV Utilities",p:"community/asct/ASCTard007_Rat_s_h___t/",s:1},
+      {n:"harmonize",d:"Flips between a fifth and a fourth above the input, very fast",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/harmonize_NOTES_CV/",s:0},
+      {n:"nscale_CV_best",d:"Self-playing scale pattern, not a quantizer",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/nscale_CV_best/",s:0},
+      {n:"uffq_quantizer",d:"Forum snippet, not an ArdCore sketch",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/uffq_quantizer/",s:0},
       {n:"THERMOMETER",d:"On-chip temperature sensor readout",c:"CV Utilities",p:"snazzy_fx/THERMOMETER/",s:1},
+      {n:"Voltmeter (A2)",d:"Averages A2 and prints the voltage over serial",c:"CV Utilities",p:"snazzy_fx/AUTOMATIC_VOLTAGE_METER_MODIFIED_FOR_ARDCORE_A2/",s:1},
+      {n:"arbitray_quantizer_FASTNOTES",d:"Maps A2 to a list of 35 arbitrary values (.pde)",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/arbitray_quantizer_FASTNOTES.pde",s:0},
+      {n:"spaceshipquantizer",d:"Note × transpose × sin(A0): spaceship noises (.pde)",c:"CV Utilities",p:"snazzy_fx/CV-LFO_SKETCHES/spaceshipquantizer_pde.pde",s:0},
       // Audio Effects
-      {n:"AC28 — Rectified Ring Mod",d:"Ring modulation of half-rectified waveforms",c:"Effects",p:"official/AC28_RectifiedRingMod/",s:1},
-      {n:"ANOTHER_DELAY",d:"Feedback delay with knob control",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/ANOTHER_DELAY/",s:1},
-      {n:"BLOG_DELAY_BEST",d:"Optimized delay with feedback and modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST/",s:1},
-      {n:"DELAY_ONLY",d:"Simple delay effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_ONLY/",s:1},
-      {n:"DELAY_SMOOTH",d:"Smooth delay with bitcrush",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_SMOOTH/",s:1},
-      {n:"Long_DELAY_BEST",d:"Extended delay for long decay times",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST/",s:1},
-      {n:"reverb_prttygood",d:"Reverb effect with time-based modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood/",s:1},
-      {n:"SWIRLY_DELAY",d:"Delay with swirling modulation",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/SWIRLY_DELAY/",s:1},
-      {n:"weird_delay",d:"Noisy experimental delay",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/weird_delay/",s:1},
-      {n:"DISTORTION",d:"Bit-crushing distortion effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DISTORTION/",s:1},
+      {n:"AC28 — Rectified Ring Mod",d:"A2 × A3 ring mod, rectified and wrapped: very harsh",c:"Effects",p:"official/AC28_RectifiedRingMod/",s:1},
+      {n:"ANOTHER_DELAY",d:"Dirty delay with a repeating slice",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/ANOTHER_DELAY/",s:1},
+      {n:"BLOG_DELAY_BEST",d:"Short delay with all-or-nothing feedback that builds up",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST/",s:1},
+      {n:"BLOG_DELAY_BEST_fixed",d:"All-or-nothing feedback delay, knob the right way round",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/BLOG_DELAY_BEST_fixed/",s:1},
+      {n:"DELAY_ONLY",d:"Echo with 50% feedback and a sample-rate crusher",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_ONLY/",s:1},
+      {n:"DELAY_SMOOTH",d:"Echo with fixed 50% feedback",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/DELAY_SMOOTH/",s:1},
+      {n:"Long_DELAY_BEST",d:"Short clean delay with feedback, up to about 60ms",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST/",s:1},
+      {n:"Long_DELAY_BEST_fixed",d:"Clean short delay, knob the right way round",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/Long_DELAY_BEST_fixed/",s:1},
+      {n:"reverb_prttygood",d:"Two fixed echoes, not really a reverb",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood/",s:1},
+      {n:"reverb_prttygood_fixed",d:"Two echoes, input read properly, no wrapping",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/reverb_prttygood_fixed/",s:1},
+      {n:"SWIRLY_DELAY",d:"Delay whose time jumps about as A3 moves",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/SWIRLY_DELAY/",s:1},
+      {n:"weird_delay",d:"Plays uninitialised memory, not the delay: noise",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/weird_delay/",s:1},
+      {n:"DISTORTION",d:"Bit-swapping digital distortion with sample-rate crush",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DISTORTION/",s:1},
       {n:"waveshpr1",d:"Waveshaper with crush and offset control",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr1/",s:1},
       {n:"waveshpr2",d:"Waveshaper effect processor",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2/",s:1},
+      {n:"waveshpr2_fixed",d:"XOR waveshaper, A1 and A2 pick the shape, fixed 2026 copy",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr2_fixed/",s:1},
       {n:"waveshpr3",d:"Waveshaper distortion effect",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/waveshapers/waveshpr3/",s:1},
-      {n:"WORKING_CRUSHER",d:"Bit crusher with clock-based processing",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/WORKING_CRUSHER/",s:1},
+      {n:"WORKING_CRUSHER",d:"Clocked sample-rate crusher",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/WORKING_CRUSHER/",s:1},
+      {n:"ANOTHER_DELAY_mod",d:"Louder, dirtier ANOTHER_DELAY",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/ANOTHER_DELAY_mod/",s:1},
+      {n:"weird_modulator",d:"Random-level chopper with sample-rate crush",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/DELAY_SKETCHES/weird_modulator/weird_modulator/",s:1},
+      {n:"fucked_square",d:"Bit-mangled shaped LFO, glitchy square (.pde)",c:"Effects",p:"snazzy_fx/dans_trashy_mods/fucked_square/",s:0},
+      {n:"fucked_squareB",d:"fucked_square with CV on A2 and A3 (.pde)",c:"Effects",p:"snazzy_fx/EXPERIMENTAL_AUDIO/fucked_squareB/",s:0},
       // Bytebeat
-      {n:"accorian",d:"Bytebeat algorithmic audio synthesis",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/accorian/",s:1},
+      {n:"accorian",d:"Five bytebeat formulas, PWM on one DAC bit",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/accorian/",s:1},
       {n:"drumsandmelody",d:"Bytebeat drums and melody pattern",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/drumsandmelody/",s:1},
       {n:"french_friesWcv",d:"Bytebeat with CV pattern control",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/french_friesWcv/",s:1},
-      {n:"fucking_techno",d:"Bytebeat algorithmic techno",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/fucking_techno/",s:1},
-      {n:"pretty1",d:"Bytebeat pattern generator",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1/",s:1},
-      {n:"pretty1_pot",d:"Bytebeat with potentiometer control",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1_pot/",s:1},
-      {n:"shortArduino_DANT",d:"Bytebeat short-form synthesizer",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino_DANT/",s:1},
-      {n:"sloe_dub",d:"Bytebeat dub-style audio",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/sloe_dub/",s:1},
-      {n:"two_controls_machine",d:"Bytebeat dual-control machine",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/two_controls_machine/",s:1},
+      {n:"fucking_techno",d:"One bytebeat formula, PWM on one DAC bit",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/fucking_techno/",s:1},
+      {n:"pretty1",d:"3*t&t>>8, full speed, no controls",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1/",s:1},
+      {n:"pretty1_pot",d:"3*t&t>>8 with speed on A2",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1_pot/",s:1},
+      {n:"shortArduino_DANT",d:"Layered bytebeat, PWM on D0",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino_DANT/",s:1},
+      {n:"sloe_dub",d:"Bytebeat, PWM on D0",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/sloe_dub/",s:1},
+      {n:"two_controls_machine",d:"Bytebeat with speed on A2 and a divider on A1",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/two_controls_machine/",s:1},
+      {n:"drumsandmelody_2",d:"drumsandmelody without the -1",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/drumsandmelody_2/",s:1},
+      {n:"mvValues_musc",d:"Bytebeat with A2 and A3 inside the formula",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/mvValues_musc/",s:1},
+      {n:"pretty1a_pot",d:"Bytebeat with speed on A2",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/pretty1a_pot/",s:1},
+      {n:"stairstep_pot",d:"Jumpy bytebeat staircase, speed on A2",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/stairstep_pot/",s:1},
+      {n:"shortArduino1",d:"viznut's crowd formula as PWM on one DAC bit",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino1/",s:1},
+      {n:"shortArduino1_2",d:"Short melodic bytebeat as PWM on D0",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino1_2/",s:1},
+      {n:"shortArduino_DANT_melody",d:"Same as shortArduino_DANT, PWM on D0",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/shortArduino_DANT_melody/",s:1},
+      {n:"simple_template",d:"One formula, straight to the DAC",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/simple_template/",s:1},
+      {n:"delay_byte1",d:"Delay with bytebeat formulas on time and feedback",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/delay_expeweriments/delay_byte1/",s:1},
+      {n:"CROWD_Make_compatible",d:"TVout video bytebeat, not for the ArdCore",c:"Bytebeat",p:"snazzy_fx/BYTEBEAT_CV_and_AUDIO/CROWD_Make_compatible/",s:0},
       // Noise
-      {n:"DeadCityRadio (LFO rate)",d:"White noise at LFO rates",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/",s:1},
-      {n:"DeadCityRadio (audio rate)",d:"White noise at audio rates",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/",s:1},
-      {n:"ARDCORE_NOISEMAKER",d:"Simple noise generator, multiplies knobs",c:"Noise",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_NOISEMAKER/",s:1},
+      {n:"DeadCityRadio (LFO rate)",d:"Random stepped CV from a noise buffer",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_LFOrate/",s:1},
+      {n:"DeadCityRadio (audio rate)",d:"White noise with rate and smoothing",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_AudioRate/",s:1},
+      {n:"DeadCityRadio (clocked)",d:"Random value on each clock",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_Clocked/",s:1},
+      {n:"DeadCityRadio (LFO rate, fixed)",d:"Random stepped CV, 20ms to 2s per step, fixed 2026 copy",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_LFOrate_fixed/",s:1},
+      {n:"DeadCityRadio (audio rate, fixed)",d:"White noise with rate and working smoothing, fixed 2026 copy",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_AudioRate_fixed/",s:1},
+      {n:"DeadCityRadio (clocked, fixed)",d:"Random value on each clock, fixed 2026 copy",c:"Noise",p:"community/asct/ASCTard011_DeadCityRadio/DeadCityRadio_Clocked_fixed/",s:1},
+      {n:"ARDCORE_NOISEMAKER",d:"A2 × A0 wrapped to 8 bits: folded buzz",c:"Noise",p:"snazzy_fx/EXPERIMENTAL_AUDIO/ARDCORE_NOISEMAKER/",s:1},
       {n:"SDIY_ARDCORE_NOISE",d:"White noise generator",c:"Noise",p:"snazzy_fx/WHITE_NOISE/SDIY_ARDCORE_NOISE/",s:1},
+      {n:"AC66_NOISE_BOMB",d:"Clocked, scrambled sine (.pde)",c:"Noise",p:"snazzy_fx/dans_trashy_mods/AC66_NOISE_BOMB/",s:0},
       // Drums
-      {n:"fac_drums",d:"Lo-fi drum sample player with 8 sounds (.pde)",c:"Drums",p:"snazzy_fx/fac_drums/",s:0},
-      {n:"stereo_beat_gen",d:"Stereo drum pattern generator",c:"Drums",p:"snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_pde/",s:0},
+      {n:"fac_drums",d:"Lo-fi drum sample player with 8 sounds (old types, won't build)",c:"Drums",p:"snazzy_fx/fac_drums/",s:0},
+      {n:"fac_drums_fixed",d:"Eight-sound drum player, fixed 2026 copy that builds",c:"Drums",p:"snazzy_fx/fac_drums_fixed/",s:1},
+      {n:"stereo_beat_gen",d:"Loud Objects' 1-bit stereo beat on D0 and D1",c:"Drums",p:"snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_pde/",s:0},
+      {n:"stereo_beat_gen_fixed",d:"1-bit stereo beat, builds, new-beat on A1",c:"Drums",p:"snazzy_fx/EXPERIMENTAL_AUDIO/stereo_beat_gen_fixed/",s:1},
       // Other
-      {n:"OX02 — Step Variation",d:"Step through 2D pattern for 8 gate outputs (expander)",c:"Expander",p:"official/OX02_StepVariation/",s:1},
-      {n:"OX03 — Analog Tracker",d:"Follow analog input with 8 gate outputs (expander)",c:"Expander",p:"official/OX03_AnalogTracker/",s:1},
-      {n:"CP01 — Compound 01",d:"QuadSketch: VCADLoopEnv, Quantizer, DrunkenNote, SH101",c:"Compound",p:"official/CP01_Compound01/",s:1},
-      {n:"CP02 — Compound 02",d:"QuadSketch: VCADLoopEnv, ShapedLFO, DrunkenNote, SH101",c:"Compound",p:"official/CP02_Compound02/",s:1},
-      {n:"ASCTard013 — Midi2gates",d:"MIDI note-to-gates converter with divider",c:"MIDI",p:"community/asct/ASCTard013_Midi2gates/",s:1},
+      {n:"OX02 — Step Variation",d:"8-step switch for the expander, 10 patterns",c:"Expander",p:"official/OX02_StepVariation/",s:1},
+      {n:"OX03 — Analog Tracker",d:"CV bar-graph on the expander's 8 jacks",c:"Expander",p:"official/OX03_AnalogTracker/",s:1},
+      {n:"CP01 — Compound 01",d:"Four sketches in one, picked by A0 at power-up: AD envelope, quantizer, drunken note, 101",c:"Compound",p:"official/CP01_Compound01/",s:1},
+      {n:"CP02 — Compound 02",d:"Four sketches in one, picked by A0 at power-up: AD envelope, shaped LFO, drunken note, 101",c:"Compound",p:"official/CP02_Compound02/",s:1},
+      {n:"ASCTard013 — Midi2gates",d:"MIDI in on CLK to 8 expander gates, plus divided clock",c:"MIDI",p:"community/asct/ASCTard013_Midi2gates/",s:1},
     ];
 
     const GITHUB = "https://github.com/mamonu/ard_glow/tree/main/";
@@ -1464,19 +1616,94 @@ Global variables use 134 bytes (6%) of dynamic memory.</span>
       }
 
       filtered.forEach(s => {
-        const card = document.createElement('a');
-        card.className = 'sketch-card';
-        card.href = GITHUB + s.p;
-        card.target = '_blank';
-        card.style.textDecoration = 'none';
-        card.innerHTML = `
+        const row = `
           <div class="sketch-status ${s.s ? 'pass' : 'fail'}"></div>
           <div class="sketch-name">${s.n}</div>
           <div class="sketch-desc">${s.d}</div>
           <div class="sketch-cat">${s.c}</div>
         `;
-        grid.appendChild(card);
+        const info = CONTROLS_BY_PATH[s.p];
+
+        // Not written up yet: the row still goes straight to the code.
+        if (!info) {
+          const card = document.createElement('a');
+          card.className = 'sketch-card';
+          card.href = GITHUB + s.p;
+          card.target = '_blank';
+          card.style.textDecoration = 'none';
+          card.innerHTML = row;
+          grid.appendChild(card);
+          return;
+        }
+
+        const item = document.createElement('div');
+        item.className = 'sketch-item';
+        const head = document.createElement('button');
+        head.className = 'sketch-card';
+        head.setAttribute('aria-expanded', 'false');
+        head.innerHTML = row + '<span class="sketch-chev">▼</span>';
+        const detail = document.createElement('div');
+        detail.className = 'sketch-detail';
+        item.append(head, detail);
+
+        const setOpen = open => {
+          if (open && !detail.hasChildNodes()) buildDetail(detail, s, info);
+          item.classList.toggle('open', open);
+          head.setAttribute('aria-expanded', String(open));
+          open ? openRows.add(s.p) : openRows.delete(s.p);
+        };
+        head.addEventListener('click', () => setOpen(!item.classList.contains('open')));
+        if (openRows.has(s.p)) setOpen(true);
+        grid.appendChild(item);
       });
+    }
+
+    // ── Unfolded view: the panel plus a list of what each control does ──
+    const CONTROLS_BY_PATH = window.SKETCH_CONTROLS || {};
+    const openRows = new Set();
+
+    function buildDetail(box, s, info) {
+      const panelEl = document.createElement('div');
+      panelEl.className = 'sd-panel';
+      const body = document.createElement('div');
+      box.append(panelEl, body);
+
+      const panel = ArdCore.panel(panelEl, { notes: info.notes, animate: false, dimUnused: true });
+
+      const how = document.createElement('p');
+      how.className = 'sd-how';
+      how.textContent = info.how;
+      body.appendChild(how);
+
+      const list = document.createElement('ul');
+      list.className = 'sd-list';
+      ArdCore.ORDER.filter(id => info.notes[id]).forEach(id => {
+        const li = document.createElement('li');
+        const name = document.createElement('span');
+        name.className = 'sd-name';
+        name.textContent = ArdCore.CONTROLS[id].title;
+        const text = document.createElement('span');
+        text.textContent = info.notes[id];
+        li.append(name, text);
+        li.addEventListener('mouseenter', () => panel.highlight(id));
+        li.addEventListener('mouseleave', () => panel.highlight(null));
+        list.appendChild(li);
+      });
+      body.appendChild(list);
+
+      if (info.extra) {
+        const extra = document.createElement('p');
+        extra.className = 'sd-extra';
+        extra.textContent = info.extra;
+        body.appendChild(extra);
+      }
+
+      const code = document.createElement('a');
+      code.className = 'sd-code';
+      code.href = GITHUB + s.p;
+      code.target = '_blank';
+      code.textContent = 'Code on GitHub →';
+      body.appendChild(code);
     }
 
     // Filter click handlers
